@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="DanivaL — разработка Telegram-ботов, парсеров и Discord-серверов под ключ.">
+<meta name="theme-color" content="#1d1e22">
+<meta property="og:title" content="DanivaL — боты, парсеры и инфраструктура">
+<meta property="og:description" content="Telegram-боты, парсеры в Excel, Discord-серверы под ключ. Цены и калькулятор на сайте.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231d1e22'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='700' font-size='34' text-anchor='middle' fill='%23f3f3f1'%3ED%3C/text%3E%3C/svg%3E">
+<title>DanivaL Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          display: ['"Inter Tight"', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+          mono: ['"JetBrains Mono"', 'ui-monospace', 'Menlo', 'monospace'],
+        },
+      },
+    },
+  };
+</script>
+<style>
+  /* Layout: full-screen cover (GPU particle cloud + centered name), then calm graphite sections:
+     two-tone headlines, card grids, calculator, FAQ, contact. One deliberate graphite theme. */
+  :root {
+    color-scheme: dark;
+    --bg: #1d1e22;
+    --card: #24252a;
+    --card-2: #2a2b31;
+    --line: rgba(255, 255, 255, 0.08);
+    --line-2: rgba(255, 255, 255, 0.15);
+    --ink: #f3f3f1;
+    --muted: #9c9da4;
+    --dim: #6c6d74;
+    --accent: #9cc3ff;
+    --teal: #74e3d6;
+  }
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--bg); }
+  h1, h2, h3 { text-wrap: balance; overflow-wrap: break-word; hyphens: auto; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .display { font-family: "Inter Tight", Inter, ui-sans-serif, sans-serif; letter-spacing: -0.035em; }
+  .eyebrow { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
+
+  /* static film grain over everything — no animation, costs nothing */
+  .grain { position: fixed; inset: 0; z-index: 70; pointer-events: none; opacity: .05; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 28px; transition: transform .6s cubic-bezier(.16, 1, .3, 1), border-color .4s ease, background-color .4s ease; }
+  .card.lift:hover { transform: translate3d(0, -4px, 0); border-color: var(--line-2); background: var(--card-2); }
+  .shot img { transition: transform 1.1s cubic-bezier(.16, 1, .3, 1); }
+  .card:hover .shot img { transform: scale(1.04); }
+
+  /* cover intro: letters rise once, transform + opacity only */
+  .rise > span { display: inline-block; opacity: 0; transform: translate3d(0, .35em, 0); animation: rise 1.3s cubic-bezier(.16, 1, .3, 1) forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  .fade { opacity: 0; animation: fade 1.2s ease forwards; }
+  @keyframes fade { to { opacity: 1; } }
+
+  /* scroll reveal: visible at rest, entering the view replays a soft rise */
+  .reveal.in { animation: up 1s cubic-bezier(.16, 1, .3, 1) backwards; animation-delay: var(--d, 0s); }
+  @keyframes up { from { opacity: 0; transform: translate3d(0, 28px, 0); } to { opacity: 1; transform: none; } }
+
+  .faq .chev { transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
+  .faq[aria-expanded="true"] .chev { transform: rotate(45deg); }
+  .faq-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .55s cubic-bezier(.16, 1, .3, 1); }
+  .faq-panel > div { overflow: hidden; }
+  .faq[aria-expanded="true"] + .faq-panel { grid-template-rows: 1fr; }
+
+  .btn { transition: transform .4s cubic-bezier(.16, 1, .3, 1), background-color .3s ease, border-color .3s ease, color .3s ease; }
+  .btn:hover { transform: translate3d(0, -2px, 0); }
+  .btn:active { transform: scale(.98); }
+
+  @keyframes cue { 0% { transform: translateY(-100%); } 60%, 100% { transform: translateY(100%); } }
+  .cue::after { content: ""; position: absolute; inset: 0; background: var(--ink); animation: cue 2.4s cubic-bezier(.65, 0, .35, 1) infinite; }
+  @keyframes toast-in { from { transform: translate(-50%, 12px); opacity: 0; } to { transform: translate(-50%, 0); opacity: 1; } }
+  .toast { animation: toast-in .35s cubic-bezier(.16, 1, .3, 1) both; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .rise > span, .fade { opacity: 1; transform: none; }
+  }
+</style>
+
+<div class="grain" aria-hidden="true"></div>
+<div id="root"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+<script>
+const { useState, useEffect, useRef, useMemo } = React;
+const html = htm.bind(React.createElement);
+const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- контакты ---------- */
+const LINKS = {
+  telegram: 'https://t.me/DanivaL_Official',
+  telegramLabel: '@DanivaL_Official',
+  kwork: 'https://kwork.com/user/nnamko3',
+  funpay: 'https://funpay.com/users/18724093/',
+};
+const BRAND = 'DanivaL';
+const USD_RATE = 80;   // для EN/ES цены в долларах
+
+/* ================= Обложка: облако частиц на видеокарте ================= */
+function startCloud(canvas, host) {
+  const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: false, powerPreference: 'high-performance' });
+  if (!gl) { canvas.style.display = 'none'; return () => {}; }
+  const N = innerWidth < 700 ? 14000 : 26000;
+  const data = new Float32Array(N * 4);
+  for (let i = 0; i < N; i++) {
+    const y = 1 - 2 * (i + 0.5) / N, r = Math.sqrt(1 - y * y), th = i * 2.399963;
+    data.set([Math.cos(th) * r, y, Math.sin(th) * r, Math.random()], i * 4);
+  }
+  const VS = `
+attribute vec4 aP;
+uniform float uTime, uIntro, uPx; uniform vec2 uTilt, uS;
+varying float vA, vT, vF;
+mat3 rotY(float a){ float c = cos(a), s = sin(a); return mat3(c, 0., -s, 0., 1., 0., s, 0., c); }
+mat3 rotX(float a){ float c = cos(a), s = sin(a); return mat3(1., 0., 0., 0., c, s, 0., -s, c); }
+void main(){
+  vec3 p = aP.xyz; float rnd = aP.w; float t = uTime;
+  float d = sin(p.x * 2.6 + t * .55) * sin(p.y * 2.2 - t * .4) * sin(p.z * 2.9 + t * .35);
+  float d2 = sin((p.x + p.y) * 7. + t * 1.1) * sin(p.z * 6. - t * .9);
+  float dust = step(.965, rnd);
+  float r = mix(1. + .28 * d + .035 * d2, 1.35 + fract(rnd * 97.) * 1.7, dust);
+  float k = clamp((uIntro - rnd * .35) / .65, 0., 1.); k = 1. - pow(1. - k, 3.);
+  vec3 pos = mix(p * (3. + fract(rnd * 53.) * 4.), p * r, k);
+  pos = rotX(.35 + uTilt.y) * rotY(t * .08 + uTilt.x) * pos;
+  float w = 3.4 - pos.z;
+  vec2 sp = pos.xy * (1.9 / w);
+  gl_Position = vec4(sp * uS, 0., 1.);
+  float front = clamp((pos.z + 1.) * .5, 0., 1.);
+  gl_PointSize = uPx * (.8 + fract(rnd * 31.) * 1.3) * (3.4 / w) * mix(1., .7, dust);
+  vA = k * mix(.22 + .78 * front, .45, dust); vT = d * .5 + .5; vF = front;
+}`;
+  const FS = `
+precision mediump float;
+varying float vA, vT, vF;
+void main(){
+  float m = smoothstep(.5, .08, length(gl_PointCoord - .5));
+  vec3 col = mix(vec3(.30, .86, .84), vec3(.42, .56, 1.), vT);
+  col = mix(col, vec3(.88, .94, 1.), smoothstep(.7, 1., vF) * .55);
+  float a = m * vA * 1.15;
+  gl_FragColor = vec4(col * a, a);
+}`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+  let prog;
+  try {
+    prog = gl.createProgram();
+    gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS)); gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  } catch (e) { console.warn('cloud shader failed', e); canvas.style.display = 'none'; return () => {}; }
+  gl.useProgram(prog);
+  const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'aP'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, 0);
+  const U = {}; ['uTime', 'uIntro', 'uPx', 'uTilt', 'uS'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
+  gl.clearColor(0, 0, 0, 0);
+
+  const dpr = Math.min(devicePixelRatio || 1, 2);
+  const tilt = { x: 0, y: 0, tx: 0, ty: 0 };
+  const t0 = performance.now(); let raf = 0, visible = true, onScreen = true;
+
+  function size() {
+    const w = host.clientWidth, h = host.clientHeight;
+    canvas.width = Math.max(2, Math.round(w * dpr)); canvas.height = Math.max(2, Math.round(h * dpr));
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    const m = Math.min(w, h) * 1.12;
+    gl.uniform2f(U.uS, m / w, m / h);
+    gl.uniform1f(U.uPx, 1.5 * dpr);
+    if (REDUCED) draw(12, 1);
+  }
+  function draw(t, intro) {
+    gl.uniform1f(U.uTime, t); gl.uniform1f(U.uIntro, intro); gl.uniform2f(U.uTilt, tilt.x, tilt.y);
+    gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.POINTS, 0, N);
+  }
+  function loop() {
+    const t = (performance.now() - t0) / 1000;
+    tilt.x += (tilt.tx - tilt.x) * 0.04; tilt.y += (tilt.ty - tilt.y) * 0.04;
+    draw(t + 4, Math.min(1, t / 2.8));
+    raf = requestAnimationFrame(loop);
+  }
+  const go = () => { cancelAnimationFrame(raf); if (!REDUCED && visible && onScreen) raf = requestAnimationFrame(loop); };
+  const onMove = e => { tilt.tx = (e.clientX / innerWidth - 0.5) * 0.5; tilt.ty = (e.clientY / innerHeight - 0.5) * 0.3; };
+  const onVis = () => { visible = !document.hidden; go(); };
+  const ro = new ResizeObserver(size); ro.observe(host);
+  const io = new IntersectionObserver(([en]) => { onScreen = en.isIntersecting; go(); });
+  io.observe(host);
+  size(); if (REDUCED) draw(12, 1); else go();
+  addEventListener('pointermove', onMove, { passive: true }); document.addEventListener('visibilitychange', onVis);
+  return () => { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); removeEventListener('pointermove', onMove); document.removeEventListener('visibilitychange', onVis); };
+}
+
+/* ================= данные ================= */
+const SERVICE_PRICES = [[1500, 3000, 6000], [1200, 2000, 500], [600, 1000, 2000], [800, 1000, 3000]];
+const SERVICE_PLUS = [[0, 0, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0]];
+const WORK_STACK = ['aiogram 3 · SQLite · Pillow', 'discord.py 2 · SQLite', 'requests · bs4 · openpyxl', 'Python · SQLite · Bot API', 'discord.py · Discord API', 'pandas · pdfplumber'];
+const TYPE_BASE = [1500, 1200, 600];
+const OPTION_ADD = [700, 1000, 400, null];   // null — множитель ×1.5
+const ART = [
+  'radial-gradient(70% 90% at 25% 15%, rgba(116,227,214,.55), transparent 60%), radial-gradient(60% 80% at 85% 90%, rgba(156,195,255,.45), transparent 60%), #2a2c31',
+  'radial-gradient(70% 90% at 80% 20%, rgba(160,140,255,.5), transparent 60%), radial-gradient(60% 80% at 15% 95%, rgba(116,227,214,.3), transparent 60%), #2a2a31',
+  'radial-gradient(80% 90% at 20% 85%, rgba(116,227,214,.5), transparent 60%), radial-gradient(60% 70% at 85% 10%, rgba(255,255,255,.18), transparent 60%), #292b2e',
+  'radial-gradient(70% 90% at 85% 75%, rgba(255,190,120,.42), transparent 60%), radial-gradient(60% 70% at 10% 15%, rgba(156,195,255,.4), transparent 60%), #2c2b2c',
+  'radial-gradient(80% 90% at 50% 0%, rgba(156,195,255,.5), transparent 60%), radial-gradient(70% 80% at 50% 100%, rgba(160,140,255,.32), transparent 60%), #2a2b31',
+  'radial-gradient(70% 90% at 25% 25%, rgba(255,255,255,.2), transparent 60%), radial-gradient(70% 90% at 80% 85%, rgba(116,227,214,.42), transparent 60%), #2a2b2e',
+];
+
+const T = {
+  ru: {
+    locale: 'ru-RU', currency: 'RUB', name: 'Русский',
+    nav: ['Услуги', 'Работы', 'Стоимость', 'Вопросы'], navCta: 'Написать', status: 'Свободен для заказов',
+    intro: 'Портфолио', sub: ['Разработка ботов, парсеров', 'и инфраструктуры.'],
+    cta: 'Обсудить проект', cta2: 'Смотреть работы', scroll: 'Листайте вниз',
+    stats: [['24/7', 'боты на хостинге'], ['7 дней', 'бесплатных правок'], ['100%', 'исходный код']],
+    from: 'от',
+    servicesTitle: ['Услуги.', 'Четыре направления, одна планка качества.'],
+    services: [
+      { title: 'Telegram-боты и Mini Apps', text: 'Боты на aiogram 3 с базой данных, оплатой и автовыдачей, админкой в самом боте и веб-интерфейсом Mini Apps.', items: ['Бот с меню и ответами', 'Магазин, запись или заявки с базой', 'Mini App с веб-интерфейсом'] },
+      { title: 'Парсеры и автоматизация', text: 'Сбор данных в Excel и Google Таблицы, мониторинг объявлений и цен с уведомлениями в Telegram.', items: ['Парсер одного сайта', 'Мониторинг с уведомлениями', 'Запуск по расписанию'] },
+      { title: 'Discord под ключ', text: 'Структура сервера, роли и права, тикеты, уровни и модерация, свои боты на discord.py.', items: ['Настройка ролей и прав', 'Сервер под ключ', 'Свой бот для сервера'] },
+      { title: 'Игровой моддинг', text: 'Калибровка физики и моторов в JBeam, механики и скрипты на Lua, чтобы техника вела себя как задумано.', items: ['Калибровка мотора или подвески', 'Скрипт или механика на Lua', 'Мод с нуля'] },
+    ],
+    worksTitle: ['Работы.', 'Проекты, которые уже работают.'],
+    works: [
+      ['Бот-магазин в Telegram', 'Каталог с фото, корзина, оформление заказа, статусы и админка с рассылкой.', '4 шага до заказа'],
+      ['Discord-бот «всё в одном»', 'Тикеты, уровни, роли по кнопкам, приветствие с картинкой и сборка сервера за минуту.', '6 тем серверов'],
+      ['Парсер каталога в Excel', 'Обходит весь каталог по страницам и выгружает таблицу со сводным листом.', '1000 товаров за минуту'],
+      ['Мониторинг цен', 'Хранит историю цен и присылает в Telegram, что подешевело, подорожало или появилось.', '117 товаров за 4 с'],
+      ['Шаблоны Discord-серверов', 'Готовые структуры каналов, ролей и прав, которые собираются в один клик.', 'до 26 каналов'],
+      ['Таблицы из PDF и сайтов', 'Достаёт все таблицы со страницы или из PDF и чистит числа и сноски.', '5 таблиц со страницы'],
+    ],
+    calcTitle: ['Стоимость.', 'Посчитайте за минуту.'],
+    calcLead: 'Выберите тип и опции, цена пересчитается сразу. Это ориентир, точную сумму назову после обсуждения.',
+    typeLabel: 'Тип заказа', optLabel: 'Опции', noteLabel: 'Коротко о задаче', notePh: 'Например: бот для записи клиентов в барбершоп, 3 мастера',
+    types: ['Telegram-бот', 'Парсер', 'Discord-сервер'], options: ['База данных', 'Админ-панель', 'Хостинг 24/7', 'Срочно, за 24 часа'],
+    estimate: 'Ориентировочно', noType: 'Тип не выбран', pickType: 'Выберите тип заказа, чтобы увидеть цену и скопировать ТЗ.',
+    copy: 'Скопировать ТЗ', copied: 'ТЗ скопировано. Отправьте его мне в Telegram', copyFail: 'Не удалось скопировать: текст выделен, нажмите Ctrl+C',
+    brief: { title: 'ТЗ для DanivaL', type: 'Тип заказа', opts: 'Опции', none: 'без доп. опций', urgent: 'Срочность', yes: 'да, за 24 часа', no: 'обычный срок', price: 'Ориентировочная стоимость', desc: 'Описание задачи', descPh: '(опишите, что должно получиться)' },
+    faqTitle: ['Вопросы.', 'И ответы на них.'],
+    faq: [
+      ['Сколько времени занимает заказ?', 'Простой бот или парсер — 1–3 дня. Магазин, запись или мониторинг с базой данных — 3–7 дней. Срочно за 24 часа тоже можно, с наценкой ×1.5.'],
+      ['Как проходит оплата?', 'Через Kwork или FunPay с защитой сделки: деньги приходят мне только после того, как вы приняли работу.'],
+      ['Что я получу в конце?', 'Полный исходный код, инструкцию по запуску и 7 дней бесплатных правок. По желанию запущу всё на хостинге 24/7.'],
+      ['Можно будет доработать потом?', 'Да. Код остаётся вашим, а новые функции я добавлю в любой момент по прайсу.'],
+    ],
+    contactTitle: ['Есть задача?', 'Напишите в Telegram.'], contactText: 'Опишите, что нужно, или пришлите ТЗ из калькулятора. Отвечаю в течение часа и называю точную цену.',
+    linkSubs: [LINKS.telegramLabel, 'заказ с защитой сделки', 'лоты и автовыдача'],
+  },
+  en: {
+    locale: 'en-US', currency: 'USD', name: 'English',
+    nav: ['Services', 'Work', 'Pricing', 'FAQ'], navCta: 'Contact', status: 'Available for work',
+    intro: 'Portfolio', sub: ['Building bots, scrapers', 'and infrastructure.'],
+    cta: 'Discuss a project', cta2: 'View work', scroll: 'Scroll down',
+    stats: [['24/7', 'hosted bots'], ['7 days', 'of free fixes'], ['100%', 'source code']],
+    from: 'from',
+    servicesTitle: ['Services.', 'Four directions, one standard of quality.'],
+    services: [
+      { title: 'Telegram bots & Mini Apps', text: 'aiogram 3 bots with databases, payments and instant delivery, an admin panel inside the bot and Mini App web interfaces.', items: ['Bot with menus and replies', 'Shop, bookings or leads with a database', 'Mini App with a web interface'] },
+      { title: 'Scrapers & automation', text: 'Data collection into Excel and Google Sheets, listing and price monitoring with Telegram alerts.', items: ['Scraper for one website', 'Monitoring with alerts', 'Scheduled runs'] },
+      { title: 'Turnkey Discord', text: 'Server structure, roles and permissions, tickets, levels and moderation, custom discord.py bots.', items: ['Roles and permissions setup', 'Turnkey server', 'Custom server bot'] },
+      { title: 'Game modding', text: 'Physics and engine tuning in JBeam, mechanics and Lua scripts, so vehicles behave exactly as intended.', items: ['Engine or suspension tuning', 'Lua script or mechanic', 'Mod from scratch'] },
+    ],
+    worksTitle: ['Work.', 'Projects that already run.'],
+    works: [
+      ['Telegram shop bot', 'Catalog with photos, cart, checkout, order statuses and an admin panel with broadcasts.', '4 steps to order'],
+      ['All-in-one Discord bot', 'Tickets, levels, button roles, welcome cards and a full server setup in one minute.', '6 server themes'],
+      ['Catalog scraper to Excel', 'Crawls the whole catalog page by page and exports a table with a summary sheet.', '1000 items a minute'],
+      ['Price monitoring', 'Keeps price history and tells you in Telegram what got cheaper, pricier or new.', '117 items in 4 s'],
+      ['Discord server templates', 'Ready-made channel, role and permission structures that build in one click.', 'up to 26 channels'],
+      ['Tables from PDF & web', 'Pulls every table from a page or PDF and cleans up numbers and footnotes.', '5 tables per page'],
+    ],
+    calcTitle: ['Pricing.', 'Estimate it in a minute.'],
+    calcLead: 'Pick a type and options, the price updates instantly. It is an estimate; I confirm the exact amount after we talk.',
+    typeLabel: 'Project type', optLabel: 'Options', noteLabel: 'About the task', notePh: 'For example: a booking bot for a barbershop with 3 barbers',
+    types: ['Telegram bot', 'Scraper', 'Discord server'], options: ['Database', 'Admin panel', '24/7 hosting', 'Urgent, within 24 hours'],
+    estimate: 'Estimate', noType: 'No type selected', pickType: 'Pick a project type to see the price and copy the brief.',
+    copy: 'Copy the brief', copied: 'Brief copied. Send it to me on Telegram', copyFail: 'Could not copy: the text is selected, press Ctrl+C',
+    brief: { title: 'Brief for DanivaL', type: 'Project type', opts: 'Options', none: 'no extra options', urgent: 'Urgency', yes: 'yes, within 24 hours', no: 'regular timeline', price: 'Estimated price', desc: 'Task description', descPh: '(describe the result you need)' },
+    faqTitle: ['Questions.', 'Answered.'],
+    faq: [
+      ['How long does a project take?', 'A simple bot or scraper takes 1–3 days. A shop, booking system or monitoring with a database takes 3–7 days. Urgent 24-hour delivery is possible with a ×1.5 rate.'],
+      ['How does payment work?', 'Through Kwork or FunPay with deal protection: I only get paid after you accept the work.'],
+      ['What do I get at the end?', 'Full source code, setup instructions and 7 days of free fixes. If you like, I will run it on 24/7 hosting.'],
+      ['Can it be extended later?', 'Yes. The code is yours, and I can add new features at any time at the listed rates.'],
+    ],
+    contactTitle: ['Got a task?', 'Message me on Telegram.'], contactText: 'Describe what you need or send the brief from the calculator. I reply within an hour with an exact price.',
+    linkSubs: [LINKS.telegramLabel, 'deal protection', 'listings & instant delivery'],
+  },
+  es: {
+    locale: 'es-ES', currency: 'USD', name: 'Español',
+    nav: ['Servicios', 'Trabajos', 'Precios', 'Preguntas'], navCta: 'Escribir', status: 'Disponible',
+    intro: 'Portafolio', sub: ['Desarrollo de bots, scrapers', 'e infraestructura.'],
+    cta: 'Hablemos', cta2: 'Ver trabajos', scroll: 'Desliza hacia abajo',
+    stats: [['24/7', 'bots en hosting'], ['7 días', 'de ajustes gratis'], ['100%', 'código fuente']],
+    from: 'desde',
+    servicesTitle: ['Servicios.', 'Cuatro áreas, un mismo nivel de calidad.'],
+    services: [
+      { title: 'Bots de Telegram y Mini Apps', text: 'Bots con aiogram 3: base de datos, pagos y entrega automática, panel de administración en el propio bot y Mini Apps web.', items: ['Bot con menús y respuestas', 'Tienda, reservas o solicitudes', 'Mini App con interfaz web'] },
+      { title: 'Scrapers y automatización', text: 'Recolección de datos en Excel y Google Sheets, seguimiento de anuncios y precios con avisos en Telegram.', items: ['Scraper de un sitio', 'Seguimiento con avisos', 'Ejecución programada'] },
+      { title: 'Discord completo', text: 'Estructura del servidor, roles y permisos, tickets, niveles y moderación, bots propios con discord.py.', items: ['Roles y permisos', 'Servidor completo', 'Bot propio para el servidor'] },
+      { title: 'Modding de juegos', text: 'Ajuste de física y motores en JBeam, mecánicas y scripts en Lua para que los vehículos se comporten como deben.', items: ['Ajuste de motor o suspensión', 'Script o mecánica en Lua', 'Mod desde cero'] },
+    ],
+    worksTitle: ['Trabajos.', 'Proyectos que ya funcionan.'],
+    works: [
+      ['Bot tienda en Telegram', 'Catálogo con fotos, carrito, pedido, estados y panel de administración con envíos masivos.', '4 pasos al pedido'],
+      ['Bot de Discord todo en uno', 'Tickets, niveles, roles con botones, bienvenida con imagen y servidor listo en un minuto.', '6 temas de servidor'],
+      ['Scraper de catálogo a Excel', 'Recorre todo el catálogo página por página y exporta una tabla con hoja resumen.', '1000 productos/min'],
+      ['Seguimiento de precios', 'Guarda el historial y avisa en Telegram qué bajó, qué subió y qué es nuevo.', '117 productos en 4 s'],
+      ['Plantillas para Discord', 'Estructuras de canales, roles y permisos que se crean con un clic.', 'hasta 26 canales'],
+      ['Tablas de PDF y webs', 'Extrae todas las tablas de una página o PDF y limpia números y notas.', '5 tablas por página'],
+    ],
+    calcTitle: ['Precios.', 'Calcúlalo en un minuto.'],
+    calcLead: 'Elige el tipo y las opciones, el precio se actualiza al instante. Es una estimación; confirmo el importe exacto tras hablar.',
+    typeLabel: 'Tipo de proyecto', optLabel: 'Opciones', noteLabel: 'Sobre la tarea', notePh: 'Por ejemplo: bot de reservas para una barbería con 3 barberos',
+    types: ['Bot de Telegram', 'Scraper', 'Servidor Discord'], options: ['Base de datos', 'Panel de admin', 'Hosting 24/7', 'Urgente, en 24 horas'],
+    estimate: 'Estimación', noType: 'Sin tipo elegido', pickType: 'Elige un tipo de proyecto para ver el precio y copiar el brief.',
+    copy: 'Copiar el brief', copied: 'Brief copiado. Envíamelo por Telegram', copyFail: 'No se pudo copiar: el texto está seleccionado, pulsa Ctrl+C',
+    brief: { title: 'Brief para DanivaL', type: 'Tipo de proyecto', opts: 'Opciones', none: 'sin opciones extra', urgent: 'Urgencia', yes: 'sí, en 24 horas', no: 'plazo normal', price: 'Precio estimado', desc: 'Descripción', descPh: '(describe el resultado que necesitas)' },
+    faqTitle: ['Preguntas.', 'Con respuesta.'],
+    faq: [
+      ['¿Cuánto tarda un proyecto?', 'Un bot o scraper sencillo, 1–3 días. Una tienda, reservas o seguimiento con base de datos, 3–7 días. También es posible en 24 horas con tarifa ×1.5.'],
+      ['¿Cómo se paga?', 'A través de Kwork o FunPay con protección: recibo el pago solo cuando aceptas el trabajo.'],
+      ['¿Qué recibo al final?', 'Código fuente completo, instrucciones de instalación y 7 días de ajustes gratis. Si quieres, lo dejo funcionando en hosting 24/7.'],
+      ['¿Se puede ampliar después?', 'Sí. El código es tuyo y puedo añadir funciones nuevas en cualquier momento según la tarifa.'],
+    ],
+    contactTitle: ['¿Tienes una tarea?', 'Escríbeme por Telegram.'], contactText: 'Cuéntame qué necesitas o envía el brief de la calculadora. Respondo en menos de una hora con el precio exacto.',
+    linkSubs: [LINKS.telegramLabel, 'pago protegido', 'ofertas y entrega automática'],
+  },
+};
+const LANGS = ['ru', 'en', 'es'];
+
+function money(t, rub, plus) {
+  const v = t.currency === 'RUB' ? rub : Math.max(1, Math.round(rub / USD_RATE));
+  const s = new Intl.NumberFormat(t.locale, { style: 'currency', currency: t.currency, maximumFractionDigits: 0 }).format(v);
+  return plus ? '+' + s : s;
+}
+
+const Icon = {
+  arrow: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>`,
+  plus: html`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>`,
+  ext: html`<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7 17L17 7M9 7h8v8"/></svg>`,
+  check: html`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg>`,
+};
+
+/* ================= разделы ================= */
+function Header({ t, lang, setLang }) {
+  return html`<header className="gutter fixed inset-x-0 z-50 flex justify-center" style=${{ top: 'calc(env(safe-area-inset-top, 0px) + 14px)' }}>
+    <div className="flex w-full max-w-5xl items-center justify-between gap-3 rounded-full border border-[color:var(--line)] bg-[#1d1e22]/70 py-2 pl-5 pr-2 backdrop-blur-xl">
+      <a href="#top" className="display text-[17px] font-semibold tracking-tight">${BRAND}</a>
+      <nav className="hidden items-center gap-7 text-[13px] text-[color:var(--muted)] md:flex" aria-label="Menu">
+        ${['#services', '#works', '#calc', '#faq'].map((h, i) => html`<a key=${h} href=${h} className="transition-colors hover:text-[color:var(--ink)]">${t.nav[i]}</a>`)}
+      </nav>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center rounded-full bg-white/[0.05] p-1" role="group" aria-label="Language">
+          ${LANGS.map(l => html`<button key=${l} onClick=${() => setLang(l)} aria-pressed=${lang === l} title=${T[l].name}
+            className=${`rounded-full px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors duration-300 ${lang === l ? 'bg-[color:var(--ink)] text-[#1d1e22]' : 'text-[color:var(--muted)] hover:text-[color:var(--ink)]'}`}>${l}</button>`)}
+        </div>
+        <a href="#contact" className="btn hidden rounded-full bg-[color:var(--ink)] px-4 py-2 text-[13px] font-semibold text-[#1d1e22] sm:inline-flex">${t.navCta}</a>
+      </div>
+    </div>
+  </header>`;
+}
+
+function Cover({ t, lang }) {
+  const host = useRef(null), canvas = useRef(null), inner = useRef(null), cloud = useRef(null);
+  useEffect(() => startCloud(canvas.current, host.current), []);
+  useEffect(() => {
+    if (REDUCED) return;
+    let ticking = false;
+    const on = () => {
+      if (ticking) return; ticking = true;
+      requestAnimationFrame(() => {
+        const h = host.current ? host.current.offsetHeight : innerHeight, y = Math.min(scrollY, h);
+        if (inner.current) { inner.current.style.transform = `translate3d(0, ${y * 0.28}px, 0)`; inner.current.style.opacity = String(Math.max(0, 1 - y / (h * 0.7))); }
+        if (cloud.current) cloud.current.style.transform = `scale(${1 + (y / h) * 0.18})`;
+        ticking = false;
+      });
+    };
+    addEventListener('scroll', on, { passive: true }); return () => removeEventListener('scroll', on);
+  }, []);
+  return html`<section id="top" ref=${host} className="relative isolate flex min-h-[640px] items-center justify-center overflow-hidden" style=${{ height: '100svh',
+      background: 'radial-gradient(60% 55% at 50% 48%, #2d2f35 0%, #23252a 45%, #1d1e22 80%)' }}>
+    <div ref=${cloud} className="absolute inset-0 -z-10" style=${{ willChange: 'transform' }}>
+      <canvas ref=${canvas} aria-hidden="true" className="h-full w-full"></canvas>
+    </div>
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-40" style=${{ background: 'linear-gradient(transparent, var(--bg))' }}></div>
+
+    <div ref=${inner} key=${lang} className="gutter relative flex w-full max-w-5xl flex-col items-center text-center" style=${{ willChange: 'transform, opacity' }}>
+      <p className="eyebrow fade" style=${{ animationDelay: '.9s' }}>${t.intro}</p>
+      <h1 className="rise display mt-4 text-[clamp(76px,17vw,240px)] font-semibold leading-[0.9] tracking-[-0.055em]" aria-label=${BRAND}
+        style=${{ textShadow: '0 0 60px rgba(29,30,34,.55)' }}>
+        ${BRAND.split('').map((ch, i) => html`<span key=${i} aria-hidden="true" style=${{ animationDelay: `${1.0 + i * 0.06}s` }}>${ch}</span>`)}
+      </h1>
+      <p className="fade display mt-6 text-[clamp(20px,2.6vw,30px)] font-medium leading-snug tracking-[-0.02em]" style=${{ animationDelay: '1.6s' }}>
+        ${t.sub[0]} <span className="text-[color:var(--muted)]">${t.sub[1]}</span>
+      </p>
+      <div className="fade mt-10 flex flex-wrap justify-center gap-3" style=${{ animationDelay: '1.85s' }}>
+        <a href="#contact" className="btn inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] px-6 py-3.5 text-sm font-semibold text-[#1d1e22]">${t.cta} ${Icon.arrow}</a>
+        <a href="#works" className="btn inline-flex items-center rounded-full border border-[color:var(--line-2)] bg-white/[0.04] px-6 py-3.5 text-sm font-semibold hover:border-white/30">${t.cta2}</a>
+      </div>
+    </div>
+
+    <div className="gutter absolute inset-x-0 bottom-0 mx-auto flex max-w-6xl items-end justify-between gap-6 pb-8">
+      <span className="eyebrow fade hidden items-center gap-3 sm:flex" style=${{ animationDelay: '2.2s' }}><span className="cue relative block h-8 w-px overflow-hidden bg-white/15"></span>${t.scroll}</span>
+      <dl className="fade flex gap-6 sm:gap-10" style=${{ animationDelay: '2.1s' }}>
+        ${t.stats.map(([v, k]) => html`<div key=${k} className="text-left"><dt className="display text-lg font-semibold sm:text-xl">${v}</dt><dd className="text-[11px] text-[color:var(--muted)]">${k}</dd></div>`)}
+      </dl>
+    </div>
+  </section>`;
+}
+
+function Heading({ lines, lead, center }) {
+  return html`<div className=${`reveal ${center ? 'mx-auto max-w-3xl text-center' : 'flex flex-wrap items-end justify-between gap-6'}`}>
+    <h2 className="display max-w-3xl text-[clamp(36px,5.4vw,68px)] font-semibold leading-[1.02]">
+      ${lines[0]} <span className="text-[color:var(--muted)]">${lines[1]}</span>
+    </h2>
+    ${lead && html`<p className=${`max-w-sm text-[15px] leading-relaxed text-[color:var(--muted)] ${center ? 'mx-auto mt-5' : ''}`}>${lead}</p>`}
+  </div>`;
+}
+
+function Services({ t }) {
+  return html`<section id="services" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+    <${Heading} lines=${t.servicesTitle}/>
+    <div className="mt-14 grid gap-4 md:grid-cols-2">
+      ${t.services.map((s, i) => html`<article key=${i} className="reveal card lift flex flex-col p-7 sm:p-9" style=${{ '--d': `${(i % 2) * 0.08}s` }}>
+        <div className="flex items-start justify-between gap-4">
+          <span className="font-mono text-xs text-[color:var(--dim)]">0${i + 1}</span>
+          <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[11px] text-[color:var(--accent)]">${t.from} ${money(t, SERVICE_PRICES[i][0])}</span>
+        </div>
+        <h3 className="display mt-10 text-[clamp(24px,2.6vw,32px)] font-semibold leading-tight">${s.title}</h3>
+        <p className="mt-3 text-[15px] leading-relaxed text-[color:var(--muted)]">${s.text}</p>
+        <ul className="mt-8 divide-y divide-[color:var(--line)] border-t border-[color:var(--line)]">
+          ${s.items.map((name, j) => html`<li key=${j} className="flex items-center justify-between gap-4 py-3 text-sm">
+            <span className="text-[color:var(--ink)]/85">${name}</span>
+            <span className="whitespace-nowrap font-mono text-[13px] tnum text-[color:var(--ink)]">${SERVICE_PLUS[i][j] ? money(t, SERVICE_PRICES[i][j], true) : `${t.from} ${money(t, SERVICE_PRICES[i][j])}`}</span></li>`)}
+        </ul>
+      </article>`)}
+    </div>
+  </section>`;
+}
+
+function Works({ t }) {
+  return html`<section id="works" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+    <${Heading} lines=${t.worksTitle} center/>
+    <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      ${t.works.map(([name, what, metric], i) => html`<article key=${i} className="reveal card lift overflow-hidden" style=${{ '--d': `${(i % 3) * 0.08}s` }}>
+        <div className="shot relative m-2 aspect-[16/11] overflow-hidden rounded-[22px]" style=${{ background: ART[i] }}>
+          <img src=${`img/w${i + 1}.webp`} alt=${name} loading="lazy" width="960" height="660" className="absolute inset-0 h-full w-full object-cover object-top"/>
+          <div className="absolute inset-0" style=${{ background: 'linear-gradient(180deg, transparent 55%, rgba(20,21,24,.75))' }}></div>
+          <span className="absolute bottom-4 left-4 rounded-full bg-black/55 px-3 py-1 font-mono text-[11px] text-white/90 backdrop-blur-sm">${metric}</span>
+          <span className="absolute bottom-3 right-4 display text-[40px] font-semibold leading-none text-white/30">${String(i + 1).padStart(2, '0')}</span>
+        </div>
+        <div className="px-6 pb-7 pt-4">
+          <h3 className="display text-xl font-semibold leading-snug">${name}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-[color:var(--muted)]">${what}</p>
+          <p className="mt-5 font-mono text-[11px] text-[color:var(--dim)]">${WORK_STACK[i]}</p>
+        </div>
+      </article>`)}
+    </div>
+  </section>`;
+}
+
+function useCountUp(target) {
+  const [v, setV] = useState(target);
+  const from = useRef(target);
+  useEffect(() => {
+    if (REDUCED) { setV(target); from.current = target; return; }
+    const start = performance.now(), a = from.current; let raf;
+    const step = now => { const k = Math.min(1, (now - start) / 500), e = 1 - Math.pow(1 - k, 4); const cur = a + (target - a) * e; setV(cur); from.current = cur; if (k < 1) raf = requestAnimationFrame(step); };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target]);
+  return v;
+}
+
+function Calculator({ t, onToast }) {
+  const [type, setType] = useState(-1);
+  const [opts, setOpts] = useState([true, false, false, false]);
+  const [note, setNote] = useState('');
+  const fallbackRef = useRef(null);
+  const priceRub = useMemo(() => {
+    if (type < 0) return 0;
+    let p = TYPE_BASE[type] + OPTION_ADD.reduce((s, add, i) => s + (opts[i] && add ? add : 0), 0);
+    if (opts[3]) p *= 1.5;
+    return Math.round(p / 50) * 50;
+  }, [type, opts]);
+  const shown = useCountUp(t.currency === 'RUB' ? priceRub : Math.round(priceRub / USD_RATE));
+  const fmt = v => new Intl.NumberFormat(t.locale, { style: 'currency', currency: t.currency, maximumFractionDigits: 0 }).format(Math.round(v));
+  const b = t.brief;
+  const brief = type < 0 ? '' : [
+    b.title,
+    `${b.type}: ${t.types[type]}`,
+    `${b.opts}: ${t.options.filter((_, i) => opts[i] && i !== 3).join(', ') || b.none}`,
+    `${b.urgent}: ${opts[3] ? b.yes : b.no}`,
+    `${b.price}: ${t.from} ${money(t, priceRub)}`,
+    `${b.desc}: ${note.trim() || b.descPh}`,
+  ].join('\n');
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(brief); onToast(t.copied); }
+    catch { const el = fallbackRef.current; if (el) { el.hidden = false; el.select(); } onToast(t.copyFail); }
+  };
+
+  return html`<section id="calc" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+    <${Heading} lines=${t.calcTitle} lead=${t.calcLead}/>
+    <div className="reveal card mt-14 grid overflow-hidden lg:grid-cols-[1.3fr_1fr]">
+      <div className="p-6 sm:p-10">
+        <p className="eyebrow">${t.typeLabel}</p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-3" role="group" aria-label=${t.typeLabel}>
+          ${t.types.map((label, i) => html`<button key=${i} onClick=${() => setType(i)} aria-pressed=${type === i}
+            className=${`flex flex-col items-start gap-1 rounded-2xl border px-4 py-4 text-left transition-colors duration-300 ${type === i ? 'border-transparent bg-[color:var(--ink)] text-[#1d1e22]' : 'border-[color:var(--line)] bg-white/[0.02] hover:border-[color:var(--line-2)]'}`}>
+            <span className="text-sm font-semibold">${label}</span>
+            <span className=${`font-mono text-[11px] ${type === i ? 'text-[#1d1e22]/60' : 'text-[color:var(--muted)]'}`}>${t.from} ${money(t, TYPE_BASE[i])}</span></button>`)}
+        </div>
+        <p className="eyebrow mt-9">${t.optLabel}</p>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          ${t.options.map((label, i) => html`<label key=${i} htmlFor=${`opt-${i}`}
+            className=${`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3.5 transition-colors duration-300 ${opts[i] ? 'border-[color:var(--line-2)] bg-white/[0.05]' : 'border-[color:var(--line)] hover:border-[color:var(--line-2)]'}`}>
+            <input id=${`opt-${i}`} type="checkbox" className="sr-only" checked=${opts[i]} onChange=${() => setOpts(s => s.map((v, k) => k === i ? !v : v))}/>
+            <span className=${`grid h-5 w-5 shrink-0 place-items-center rounded-md border transition-colors duration-300 ${opts[i] ? 'border-transparent bg-[color:var(--accent)] text-[#1d1e22]' : 'border-white/25'}`}>${opts[i] && Icon.check}</span>
+            <span className="flex-1 text-sm font-medium">${label}</span>
+            <span className="font-mono text-[11px] text-[color:var(--muted)]">${OPTION_ADD[i] ? money(t, OPTION_ADD[i], true) : '×1.5'}</span>
+          </label>`)}
+        </div>
+        <label htmlFor="note" className="eyebrow mt-9 block">${t.noteLabel}</label>
+        <textarea id="note" rows="3" value=${note} onInput=${e => setNote(e.target.value)} placeholder=${t.notePh}
+          className="mt-4 w-full resize-y rounded-2xl border border-[color:var(--line)] bg-black/15 px-4 py-3 text-sm text-[color:var(--ink)] placeholder:text-white/30 outline-none transition-colors focus:border-[color:var(--accent)]"></textarea>
+      </div>
+      <div className="flex flex-col justify-between border-t border-[color:var(--line)] bg-white/[0.02] p-6 sm:p-10 lg:border-l lg:border-t-0">
+        <div>
+          <p className="eyebrow">${t.estimate}</p>
+          <p className="display mt-4 text-[clamp(52px,7vw,88px)] font-semibold leading-none tnum">
+            ${type >= 0 ? html`<span className="block text-[0.3em] font-medium tracking-normal text-[color:var(--muted)]">${t.from}</span>${fmt(shown)}` : html`<span className="text-white/15">—</span>`}
+          </p>
+          <ul className="mt-8 space-y-2 border-t border-[color:var(--line)] pt-6 text-sm text-[color:var(--muted)]">
+            <li className="flex justify-between gap-4"><span>${type >= 0 ? t.types[type] : t.noType}</span><span className="tnum">${type >= 0 ? money(t, TYPE_BASE[type]) : ''}</span></li>
+            ${type >= 0 && t.options.map((label, i) => opts[i] && html`<li key=${i} className="flex justify-between gap-4"><span>${label}</span><span className="tnum">${OPTION_ADD[i] ? money(t, OPTION_ADD[i], true) : '×1.5'}</span></li>`)}
+          </ul>
+        </div>
+        ${type >= 0 ? html`<div className="mt-10">
+            <button onClick=${copy} className="btn inline-flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--ink)] px-6 py-4 text-sm font-semibold text-[#1d1e22]">${t.copy} ${Icon.arrow}</button>
+            <textarea ref=${fallbackRef} hidden readOnly value=${brief} rows="6" aria-label=${t.copy} className="mt-3 w-full rounded-xl border border-[color:var(--line)] bg-black/30 p-3 font-mono text-xs text-white/80"></textarea>
+          </div>`
+          : html`<p className="mt-10 text-sm text-white/40">${t.pickType}</p>`}
+      </div>
+    </div>
+  </section>`;
+}
+
+function Faq({ t }) {
+  const [open, setOpen] = useState(0);
+  return html`<section id="faq" className="gutter mx-auto max-w-3xl scroll-mt-24 py-24 sm:py-32">
+    <${Heading} lines=${t.faqTitle} center/>
+    <div className="mt-12 space-y-3">
+      ${t.faq.map(([q, a], i) => html`<div key=${i} className="reveal card overflow-hidden" style=${{ '--d': `${i * 0.05}s` }}>
+        <button className="faq flex w-full items-center justify-between gap-6 px-6 py-5 text-left sm:px-7" aria-expanded=${open === i} onClick=${() => setOpen(open === i ? -1 : i)}>
+          <span className="text-[16px] font-semibold">${q}</span>
+          <span className="chev grid h-8 w-8 shrink-0 place-items-center rounded-full bg-white/[0.06] text-[color:var(--muted)]">${Icon.plus}</span>
+        </button>
+        <div className="faq-panel"><div><p className="px-6 pb-6 text-[15px] leading-relaxed text-[color:var(--muted)] sm:px-7">${a}</p></div></div>
+      </div>`)}
+    </div>
+  </section>`;
+}
+
+function Contact({ t }) {
+  const items = [[LINKS.telegram, 'Telegram'], [LINKS.kwork, 'Kwork'], [LINKS.funpay, 'FunPay']];
+  return html`<footer id="contact" className="gutter mx-auto max-w-6xl scroll-mt-24 pb-12 pt-24 sm:pt-32">
+    <div className="reveal card relative overflow-hidden px-6 py-14 text-center sm:px-12 sm:py-20"
+      style=${{ background: 'radial-gradient(70% 90% at 50% 0%, rgba(116,227,214,.16), transparent 60%), radial-gradient(60% 80% at 50% 100%, rgba(156,195,255,.14), transparent 60%), var(--card)' }}>
+      <h2 className="display mx-auto max-w-3xl text-[clamp(36px,6vw,76px)] font-semibold leading-[1.02]">${t.contactTitle[0]} <span className="text-[color:var(--muted)]">${t.contactTitle[1]}</span></h2>
+      <p className="mx-auto mt-6 max-w-[48ch] text-[15px] leading-relaxed text-[color:var(--muted)]">${t.contactText}</p>
+      <a href=${LINKS.telegram} target="_blank" rel="noopener" className="btn mt-9 inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] px-7 py-4 text-sm font-semibold text-[#1d1e22]">${LINKS.telegramLabel} ${Icon.arrow}</a>
+    </div>
+    <div className="mt-4 grid gap-4 sm:grid-cols-3">
+      ${items.map(([href, label], i) => html`<a key=${label} href=${href} target="_blank" rel="noopener" className="reveal card lift group flex items-center justify-between gap-4 px-6 py-5" style=${{ '--d': `${i * 0.06}s` }}>
+        <span><span className="display block text-lg font-semibold">${label}</span><span className="mt-0.5 block text-xs text-[color:var(--muted)]">${t.linkSubs[i]}</span></span>
+        <span className="text-[color:var(--muted)] transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5">${Icon.ext}</span></a>`)}
+    </div>
+    <div className="mt-12 flex flex-wrap items-center justify-between gap-4 text-xs text-[color:var(--dim)]">
+      <span>© ${new Date().getFullYear()} ${BRAND}</span>
+      <span className="font-mono">Python · Telegram · Discord</span>
+    </div>
+  </footer>`;
+}
+
+function App() {
+  const [lang, setLangState] = useState(() => {
+    try { const saved = localStorage.getItem('de-lang'); if (LANGS.includes(saved)) return saved; } catch {}
+    const nav = (navigator.language || 'ru').slice(0, 2);
+    return LANGS.includes(nav) ? nav : 'ru';
+  });
+  const setLang = l => { setLangState(l); try { localStorage.setItem('de-lang', l); } catch {} };
+  const t = T[lang];
+  const [toast, setToast] = useState('');
+  useEffect(() => { document.documentElement.lang = lang; }, [lang]);
+  useEffect(() => {
+    if (REDUCED || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(entries => entries.forEach(en => {
+      if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+    }), { rootMargin: '0px 0px -8% 0px' });
+    document.querySelectorAll('.reveal').forEach(el => { if (el.getBoundingClientRect().top > innerHeight * 0.92) io.observe(el); });
+    return () => io.disconnect();
+  }, []);
+  useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(''), 3200); return () => clearTimeout(id); }, [toast]);
+
+  return html`<div>
+    <${Header} t=${t} lang=${lang} setLang=${setLang}/>
+    <main>
+      <${Cover} t=${t} lang=${lang}/>
+      <${Services} t=${t}/>
+      <${Works} t=${t}/>
+      <${Calculator} t=${t} onToast=${setToast}/>
+      <${Faq} t=${t}/>
+    </main>
+    <${Contact} t=${t}/>
+    ${toast && html`<div role="status" className="toast fixed left-1/2 z-50 rounded-full border border-[color:var(--line-2)] bg-[#2a2b31]/95 px-5 py-3 text-sm font-medium"
+      style=${{ bottom: 'calc(20px + env(safe-area-inset-bottom, 0px))', maxWidth: 'calc(100vw - 32px)' }}>${toast}</div>`}
+  </div>`;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(html`<${App}/>`);
+</script>
+
+</html>
