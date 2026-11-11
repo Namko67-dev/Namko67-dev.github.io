@@ -82,9 +82,22 @@
   .fade { opacity: 0; animation: fade 1.2s ease forwards; }
   @keyframes fade { to { opacity: 1; } }
 
-  /* scroll reveal: visible at rest, entering the view replays a soft rise */
-  .reveal.in { animation: up 1s cubic-bezier(.16, 1, .3, 1) backwards; animation-delay: var(--d, 0s); }
-  @keyframes up { from { opacity: 0; transform: translate3d(0, 28px, 0); } to { opacity: 1; transform: none; } }
+  /* scroll reveal, both directions. Hidden state exists only once JS adds .js-rv to <html>,
+     so without JS (or with reduced motion) everything is simply visible. */
+  .js-rv .reveal { opacity: 0; transform: translate3d(0, var(--from, 44px), 0) scale(.985);
+    transition: opacity .9s ease, transform 1.15s cubic-bezier(.16, 1, .3, 1); transition-delay: 0s; }
+  .js-rv .reveal[data-from="top"] { --from: -44px; }
+  .js-rv .reveal.in { opacity: 1; transform: none; transition-delay: var(--d, 0s); }
+  /* headlines: words slide up from under a mask one after another */
+  .js-rv .reveal.words { opacity: 1; transform: none; }
+  .w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: .12em; margin-bottom: -.12em; }
+  .js-rv .words .w > span { display: inline-block; opacity: 0; transform: translate3d(0, 105%, 0);
+    transition: transform 1.05s cubic-bezier(.16, 1, .3, 1), opacity .6s ease; transition-delay: 0s; }
+  .js-rv .words[data-from="top"] .w > span { transform: translate3d(0, -105%, 0); }
+  .js-rv .words.in .w > span { opacity: 1; transform: none; transition-delay: calc(var(--d, 0s) + var(--i) * 55ms); }
+  /* keep the hover lift on cards working after they have appeared, without the reveal delay */
+  .js-rv .card.lift.in:hover { transform: translate3d(0, -4px, 0); transition-delay: 0s; }
+  .js-rv .btn.reveal.in:hover { transform: translate3d(0, -2px, 0); transition-delay: 0s; }
 
   .faq .chev { transition: transform .5s cubic-bezier(.16, 1, .3, 1); }
   .faq[aria-expanded="true"] .chev { transform: rotate(45deg); }
@@ -603,12 +616,18 @@ function Cover({ t, lang }) {
   </section>`;
 }
 
+/* Делит текст на слова, каждое в своей «маске» — для появления по словам */
+function Words({ parts }) {
+  let i = 0;
+  return parts.map(([text, cls], k) => html`<span key=${k} className=${cls}>${text.split(' ').map((word, j) => html`<span key=${j} className="w"><span style=${{ '--i': i++ }}>${word}</span></span>${' '}`)}</span>`);
+}
+
 function Heading({ lines, lead, center }) {
-  return html`<div className=${`reveal ${center ? 'mx-auto max-w-3xl text-center' : 'flex flex-wrap items-end justify-between gap-6'}`}>
-    <h2 className="display max-w-3xl text-[clamp(36px,5.4vw,68px)] font-semibold leading-[1.02]">
-      ${lines[0]} <span className="text-[color:var(--muted)]">${lines[1]}</span>
+  return html`<div className=${center ? 'mx-auto max-w-3xl text-center' : 'flex flex-wrap items-end justify-between gap-6'}>
+    <h2 className="reveal words display max-w-3xl text-[clamp(36px,5.4vw,68px)] font-semibold leading-[1.02]">
+      <${Words} parts=${[[lines[0], ''], [lines[1], 'text-[color:var(--muted)]']]}/>
     </h2>
-    ${lead && html`<p className=${`max-w-sm text-[15px] leading-relaxed text-[color:var(--muted)] ${center ? 'mx-auto mt-5' : ''}`}>${lead}</p>`}
+    ${lead && html`<p className=${`reveal max-w-sm text-[15px] leading-relaxed text-[color:var(--muted)] ${center ? 'mx-auto mt-5' : ''}`} style=${{ '--d': '.25s' }}>${lead}</p>`}
   </div>`;
 }
 
@@ -661,10 +680,10 @@ function Process({ t }) {
   const delays = ['.2s', '2.3s', '4.4s'];
   return html`<section id="process" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.processTitle} lead=${t.processLead} center/>
-    <div className="reveal relative mt-16">
-      <div className="track absolute left-[16.66%] right-[16.66%] top-[19px] hidden md:block"></div>
+    <div className="relative mt-16">
+      <div className="reveal track absolute left-[16.66%] right-[16.66%] top-[19px] hidden md:block"></div>
       <ol className="relative grid gap-10 md:grid-cols-3 md:gap-8">
-        ${t.steps.map(([title, text], i) => html`<li key=${i} className="flex flex-col items-center text-center">
+        ${t.steps.map(([title, text], i) => html`<li key=${i} className="reveal flex flex-col items-center text-center" style=${{ '--d': `${0.1 + i * 0.14}s` }}>
           <span className="step-dot grid h-10 w-10 place-items-center rounded-full font-mono text-xs" style=${{ '--sd': delays[i] }}>0${i + 1}</span>
           <h3 className="display mt-6 text-xl font-semibold">${title}</h3>
           <p className="mt-2 max-w-[30ch] text-sm leading-relaxed text-[color:var(--muted)]">${text}</p>
@@ -676,9 +695,9 @@ function Process({ t }) {
 
 function Reviews({ t }) {
   return html`<section id="reviews" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
-    <div className="reveal flex flex-wrap items-end justify-between gap-6">
-      <h2 className="display max-w-3xl text-[clamp(36px,5.4vw,68px)] font-semibold leading-[1.02]">${t.reviewsTitle[0]} <span className="text-[color:var(--muted)]">${t.reviewsTitle[1]}</span></h2>
-      <a href=${LINKS.funpay} target="_blank" rel="noopener" className="btn inline-flex items-center gap-2 rounded-full border border-[color:var(--line-2)] bg-white/[0.04] px-5 py-3 text-sm font-semibold hover:border-white/30">
+    <div className="flex flex-wrap items-end justify-between gap-6">
+      <h2 className="reveal words display max-w-3xl text-[clamp(36px,5.4vw,68px)] font-semibold leading-[1.02]"><${Words} parts=${[[t.reviewsTitle[0], ''], [t.reviewsTitle[1], 'text-[color:var(--muted)]']]}/></h2>
+      <a href=${LINKS.funpay} target="_blank" rel="noopener" style=${{ '--d': '.3s' }} className="reveal btn inline-flex items-center gap-2 rounded-full border border-[color:var(--line-2)] bg-white/[0.04] px-5 py-3 text-sm font-semibold hover:border-white/30">
         ${Star} ${FUNPAY_STATS.rating} · ${t.allReviews} ${Icon.ext}</a>
     </div>
     <div className="mt-12 grid gap-4 md:grid-cols-3">
@@ -824,7 +843,7 @@ function Contact({ t }) {
   return html`<footer id="contact" className="gutter mx-auto max-w-6xl scroll-mt-24 pb-12 pt-24 sm:pt-32">
     <div className="reveal card relative overflow-hidden px-6 py-14 text-center sm:px-12 sm:py-20"
       style=${{ background: 'radial-gradient(70% 90% at 50% 0%, rgba(116,227,214,.16), transparent 60%), radial-gradient(60% 80% at 50% 100%, rgba(156,195,255,.14), transparent 60%), var(--card)' }}>
-      <h2 className="display mx-auto max-w-3xl text-[clamp(36px,6vw,76px)] font-semibold leading-[1.02]">${t.contactTitle[0]} <span className="text-[color:var(--muted)]">${t.contactTitle[1]}</span></h2>
+      <h2 className="reveal words display mx-auto max-w-3xl text-[clamp(36px,6vw,76px)] font-semibold leading-[1.02]" style=${{ '--d': '.2s' }}><${Words} parts=${[[t.contactTitle[0], ''], [t.contactTitle[1], 'text-[color:var(--muted)]']]}/></h2>
       <p className="mx-auto mt-6 max-w-[48ch] text-[15px] leading-relaxed text-[color:var(--muted)]">${t.contactText}</p>
       <a href=${LINKS.telegram} target="_blank" rel="noopener" className="btn mt-9 inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] px-7 py-4 text-sm font-semibold text-[#1d1e22]">${LINKS.telegramLabel} ${Icon.arrow}</a>
     </div>
@@ -852,11 +871,16 @@ function App() {
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
   useEffect(() => {
     if (REDUCED || !('IntersectionObserver' in window)) return;
+    // показываем блок, когда он заходит в экран; прячем, когда уходит — и запоминаем, с какой стороны он ушёл,
+    // чтобы при возврате он появился именно оттуда (снизу при прокрутке вниз, сверху при прокрутке вверх)
     const io = new IntersectionObserver(entries => entries.forEach(en => {
-      if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
-    }), { rootMargin: '0px 0px -8% 0px' });
-    document.querySelectorAll('.reveal').forEach(el => { if (el.getBoundingClientRect().top > innerHeight * 0.92) io.observe(el); });
-    return () => io.disconnect();
+      const el = en.target;
+      if (en.isIntersecting) el.classList.add('in');
+      else { el.classList.remove('in'); el.dataset.from = en.boundingClientRect.top < 0 ? 'top' : 'bottom'; }
+    }), { rootMargin: '0px 0px -10% 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+    document.documentElement.classList.add('js-rv');
+    return () => { io.disconnect(); document.documentElement.classList.remove('js-rv'); };
   }, []);
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(''), 3200); return () => clearTimeout(id); }, [toast]);
 
