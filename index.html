@@ -58,6 +58,21 @@
 
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 28px; transition: transform .6s cubic-bezier(.16, 1, .3, 1), border-color .4s ease, background-color .4s ease; }
   .card.lift:hover { transform: translate3d(0, -4px, 0); border-color: var(--line-2); background: var(--card-2); }
+  .art-frame { background: radial-gradient(80% 90% at 50% 40%, #24262c 0%, #1b1c20 75%); }
+
+  /* process: a soft light travels along the line, each step lights up as it passes */
+  .track { position: relative; height: 1px; background: var(--line-2); overflow: hidden; }
+  .track::after { content: ""; position: absolute; top: -1px; left: 0; height: 3px; width: 28%; border-radius: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent); animation: travel 4.8s cubic-bezier(.45, 0, .55, 1) infinite; }
+  @keyframes travel { from { transform: translateX(-100%); } to { transform: translateX(360%); } }
+  .step-dot { border: 1px solid var(--line-2); color: var(--muted); background: var(--bg); animation: lit 4.8s ease-in-out infinite; animation-delay: var(--sd, 0s); }
+  @keyframes lit {
+    0%, 30%, 100% { border-color: var(--line-2); color: var(--muted); box-shadow: none; }
+    10% { border-color: var(--accent); color: var(--ink); box-shadow: 0 0 0 6px rgba(156, 195, 255, .07), 0 0 26px rgba(156, 195, 255, .35); }
+  }
+  .proof a { transition: background-color .4s ease; }
+  .proof a:hover { background: rgba(255, 255, 255, .03); }
+
   .shot img { transition: transform 1.1s cubic-bezier(.16, 1, .3, 1); }
   .card:hover .shot img { transform: scale(1.04); }
 
@@ -207,7 +222,139 @@ void main(){
   return () => { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); removeEventListener('pointermove', onMove); document.removeEventListener('visibilitychange', onVis); };
 }
 
+/* ================= Рисунки в карточках услуг (Canvas 2D, крутятся только когда карточка видна) ================= */
+const C_TEAL = '116,227,214', C_BLUE = '156,195,255', C_VIOLET = '170,150,255';
+const rnd = (a, b) => a + Math.random() * (b - a);
+
+const SCENES = {
+  /* Telegram: бумажный самолётик из частиц и пунктир за ним */
+  plane: {
+    init() {
+      const tri = (a, b, c, n, fill, tone) => {
+        const out = [];
+        const edge = (p, q, k) => { for (let i = 0; i < k; i++) { const s = i / k; out.push({ x: p[0] + (q[0] - p[0]) * s, y: p[1] + (q[1] - p[1]) * s, ph: rnd(0, 6.28), tone }); } };
+        edge(a, b, n); edge(b, c, n * 0.6 | 0); edge(c, a, n * 0.8 | 0);
+        for (let i = 0; i < fill; i++) { let u = Math.random(), v = Math.random(); if (u + v > 1) { u = 1 - u; v = 1 - v; }
+          out.push({ x: a[0] + (b[0] - a[0]) * u + (c[0] - a[0]) * v, y: a[1] + (b[1] - a[1]) * u + (c[1] - a[1]) * v, ph: rnd(0, 6.28), tone, f: 1 }); }
+        return out;
+      };
+      return { pts: [...tri([1, 0], [-1, -0.62], [-0.28, 0.08], 90, 120, 0), ...tri([1, 0], [-0.28, 0.08], [-0.72, 0.52], 70, 70, 1)] };
+    },
+    draw(ctx, w, h, t, s) {
+      const S = Math.min(w * 0.3, h * 0.62), cx = w * 0.58 + Math.sin(t * 0.6) * 6, cy = h * 0.46 + Math.sin(t * 0.9) * 5;
+      const rot = -0.14 + Math.sin(t * 0.7) * 0.05, cr = Math.cos(rot), sr = Math.sin(rot);
+      for (let i = 0; i < 46; i++) {           // пунктирный след
+        const k = i / 46, x = cx - S * 0.75 - i * (w * 0.011) - ((t * 18) % (w * 0.011));
+        const y = cy + S * 0.22 + Math.sin(i * 0.22 - t * 1.6) * 12 * k + k * k * 18;
+        ctx.fillStyle = `rgba(${C_BLUE},${0.5 * (1 - k)})`; ctx.fillRect(x, y, 2, 2);
+      }
+      for (const p of s.pts) {
+        const jx = p.x + Math.sin(t * 1.3 + p.ph) * 0.018, jy = p.y + Math.cos(t * 1.1 + p.ph) * 0.018;
+        const x = cx + (jx * cr - jy * sr) * S, y = cy + (jx * sr + jy * cr) * S;
+        ctx.fillStyle = `rgba(${p.tone ? C_BLUE : C_TEAL},${p.f ? 0.32 : 0.85})`; ctx.fillRect(x, y, 1.6, 1.6);
+      }
+    },
+  },
+  /* Парсеры: хаотичный поток слева складывается в ровную таблицу справа */
+  stream: {
+    init(w) { const lanes = 8; return { lanes, last: 0, pts: Array.from({ length: 170 }, () => ({ lane: Math.random() * lanes | 0, x: rnd(0, w), v: rnd(34, 80), ph: rnd(0, 6.28) })) }; },
+    draw(ctx, w, h, t, s) {
+      const dt = s.last ? Math.min(0.05, t - s.last) : 0; s.last = t;
+      const gx = w * 0.6, top = h * 0.16, bot = h * 0.84, cols = 4;
+      ctx.fillStyle = `rgba(${C_BLUE},0.06)`;
+      for (let r = 0; r <= s.lanes; r++) ctx.fillRect(gx, top + (bot - top) * (r / s.lanes) - 0.5 * (bot - top) / s.lanes, w - gx - 14, 1);
+      for (let c = 0; c <= cols; c++) ctx.fillRect(gx + (w - gx - 14) * (c / cols), top - (bot - top) / s.lanes / 2, 1, bot - top + (bot - top) / s.lanes);
+      for (const p of s.pts) {
+        p.x += p.v * dt; if (p.x > w - 14) p.x = -4;
+        const ly = top + (bot - top) * (p.lane / (s.lanes - 1)) - 0.5 * (bot - top) / s.lanes + (bot - top) / s.lanes / 2;
+        if (p.x < gx) {
+          const ch = 1 - p.x / gx;
+          const y = ly + Math.sin(p.x * 0.03 + t * 1.4 + p.ph) * 22 * ch + Math.cos(p.x * 0.012 + p.ph * 2) * 16 * ch;
+          ctx.fillStyle = `rgba(${C_TEAL},${0.35 + 0.5 * (1 - ch)})`; ctx.fillRect(p.x, y, 1.8, 1.8);
+        } else { ctx.fillStyle = `rgba(${C_BLUE},0.85)`; ctx.fillRect(p.x, ly - 1, 6, 2); }
+      }
+    },
+  },
+  /* Discord: сеть узлов-участников, по связям бегут сигналы к серверу в центре */
+  network: {
+    init() {
+      const nodes = [{ x: 0, y: 0, r: 6 }];
+      for (let i = 0; i < 6; i++) { const a = i / 6 * 6.283 + 0.3; nodes.push({ x: Math.cos(a) * 0.48, y: Math.sin(a) * 0.48, r: 3 }); }
+      for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283; nodes.push({ x: Math.cos(a) * 0.92, y: Math.sin(a) * 0.92, r: 2 }); }
+      nodes.forEach(n => n.ph = rnd(0, 6.28));
+      const edges = [];
+      for (let i = 1; i <= 6; i++) { edges.push([0, i]); edges.push([i, i % 6 + 1]); }
+      for (let i = 7; i <= 16; i++) { edges.push([i, i === 16 ? 7 : i + 1]); const a = (i - 7) / 10 * 6.283;
+        let best = 1, bd = 9; for (let j = 1; j <= 6; j++) { const d = Math.hypot(nodes[j].x - Math.cos(a) * .48, nodes[j].y - Math.sin(a) * .48); if (d < bd) { bd = d; best = j; } } edges.push([best, i]); }
+      const pulses = Array.from({ length: 7 }, () => ({ e: edges[Math.random() * edges.length | 0], p: Math.random(), dir: Math.random() < 0.5 }));
+      return { nodes, edges, pulses, last: 0 };
+    },
+    draw(ctx, w, h, t, s) {
+      const dt = s.last ? Math.min(0.05, t - s.last) : 0; s.last = t;
+      const rx = Math.min(w * 0.36, h * 0.62), ry = h * 0.36, cx = w / 2, cy = h / 2;
+      const P = s.nodes.map(n => [cx + (n.x + Math.sin(t * 0.8 + n.ph) * 0.025) * rx, cy + (n.y + Math.cos(t * 0.7 + n.ph) * 0.03) * ry]);
+      ctx.strokeStyle = `rgba(${C_BLUE},0.16)`; ctx.lineWidth = 1; ctx.beginPath();
+      for (const [a, b] of s.edges) { ctx.moveTo(P[a][0], P[a][1]); ctx.lineTo(P[b][0], P[b][1]); } ctx.stroke();
+      for (const q of s.pulses) {
+        q.p += dt * 0.55;
+        if (q.p >= 1) { const end = q.dir ? q.e[1] : q.e[0]; const next = s.edges.filter(e => e[0] === end || e[1] === end);
+          q.e = next[Math.random() * next.length | 0]; q.dir = q.e[0] === end; q.p = 0; }
+        const [a, b] = q.dir ? [q.e[0], q.e[1]] : [q.e[1], q.e[0]];
+        const x = P[a][0] + (P[b][0] - P[a][0]) * q.p, y = P[a][1] + (P[b][1] - P[a][1]) * q.p;
+        ctx.fillStyle = `rgba(${C_TEAL},0.18)`; ctx.beginPath(); ctx.arc(x, y, 6, 0, 6.283); ctx.fill();
+        ctx.fillStyle = `rgba(${C_TEAL},0.9)`; ctx.beginPath(); ctx.arc(x, y, 1.8, 0, 6.283); ctx.fill();
+      }
+      s.nodes.forEach((n, i) => { ctx.fillStyle = `rgba(${i ? C_BLUE : C_VIOLET},${i ? 0.75 : 0.95})`; ctx.beginPath(); ctx.arc(P[i][0], P[i][1], n.r, 0, 6.283); ctx.fill(); });
+      const k = (t * 0.45) % 1;
+      ctx.strokeStyle = `rgba(${C_VIOLET},${0.45 * (1 - k)})`; ctx.beginPath(); ctx.arc(P[0][0], P[0][1], 8 + k * 34, 0, 6.283); ctx.stroke();
+    },
+  },
+  /* Моддинг: вращающееся колесо-тор из точек */
+  torus: {
+    init() { return { pts: Array.from({ length: 1100 }, () => [rnd(0, 6.283), rnd(0, 6.283)]) }; },
+    draw(ctx, w, h, t, s) {
+      const S = Math.min(w, h) * 0.34, cx = w / 2, cy = h / 2, a = t * 0.45, b = 1.0 + Math.sin(t * 0.3) * 0.25;
+      const ca = Math.cos(a), sa = Math.sin(a), cb = Math.cos(b), sb = Math.sin(b);
+      for (const [u, v] of s.pts) {
+        const R = 1 + 0.36 * Math.cos(v); let x = R * Math.cos(u + t * 0.3), y = R * Math.sin(u + t * 0.3), z = 0.36 * Math.sin(v);
+        let y2 = y * cb - z * sb, z2 = y * sb + z * cb;
+        let x3 = x * ca + z2 * sa, z3 = -x * sa + z2 * ca;
+        const f = 3 / (3 - z3), front = (z3 + 1.4) / 2.8;
+        ctx.fillStyle = `rgba(${front > 0.55 ? C_TEAL : C_BLUE},${0.15 + 0.7 * front})`;
+        ctx.fillRect(cx + x3 * S * f, cy + y2 * S * f, 1.4 * f, 1.4 * f);
+      }
+    },
+  },
+};
+const SERVICE_ART = ['plane', 'stream', 'network', 'torus'];
+
+function startArt(canvas, kind) {
+  const ctx = canvas.getContext('2d'); if (!ctx) return () => {};
+  const scene = SCENES[kind], dpr = Math.min(devicePixelRatio || 1, 1.5), t0 = performance.now();
+  let w = 0, h = 0, state, raf = 0, onScreen = false;
+  const draw = t => { ctx.clearRect(0, 0, w, h); ctx.globalCompositeOperation = 'lighter'; scene.draw(ctx, w, h, t, state); ctx.globalCompositeOperation = 'source-over'; };
+  const loop = () => { draw((performance.now() - t0) / 1000); raf = requestAnimationFrame(loop); };
+  const go = () => { cancelAnimationFrame(raf); if (onScreen && !REDUCED && !document.hidden) raf = requestAnimationFrame(loop); };
+  const size = () => {
+    const r = canvas.getBoundingClientRect(); w = r.width; h = r.height; if (!w || !h) return;
+    canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    state = scene.init(w, h); draw(6);
+  };
+  const ro = new ResizeObserver(size); ro.observe(canvas);
+  const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; go(); }); io.observe(canvas);
+  document.addEventListener('visibilitychange', go);
+  return () => { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', go); };
+}
+
+function Art({ kind }) {
+  const ref = useRef(null);
+  useEffect(() => startArt(ref.current, kind), [kind]);
+  return html`<canvas ref=${ref} aria-hidden="true" className="h-full w-full"></canvas>`;
+}
+
 /* ================= данные ================= */
+const FUNPAY_STATS = { rating: '5.0', reviews: 34 };   // обновлять по профилю FunPay
+const KWORK_COUNT = 6;
 const SERVICE_PRICES = [[1500, 3000, 6000], [1200, 2000, 500], [600, 1000, 2000], [800, 1000, 3000]];
 const SERVICE_PLUS = [[0, 0, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0]];
 const WORK_STACK = ['aiogram 3 · SQLite · Pillow', 'discord.py 2 · SQLite', 'requests · bs4 · openpyxl', 'Python · SQLite · Bot API', 'discord.py · Discord API', 'pandas · pdfplumber'];
@@ -260,6 +407,16 @@ const T = {
       ['Что я получу в конце?', 'Полный исходный код, инструкцию по запуску и 7 дней бесплатных правок. По желанию запущу всё на хостинге 24/7.'],
       ['Можно будет доработать потом?', 'Да. Код остаётся вашим, а новые функции я добавлю в любой момент по прайсу.'],
     ],
+    proof: ['рейтинг продавца на FunPay', 'отзыва покупателей', 'услуг на Kwork', 'стоимость заказа'],
+    processTitle: ['Как я работаю.', 'Цена и срок — до старта.'],
+    processLead: 'Без долгой переписки: вы описываете задачу, я задаю пару вопросов и называю точную цену.',
+    steps: [
+      ['Пишете', 'Опишите задачу в Telegram, на Kwork или FunPay. Примеры и скриншоты сильно ускоряют дело.'],
+      ['Договариваемся', 'Уточняю детали, называю цену и срок. Начинаю, когда всё понятно обеим сторонам.'],
+      ['Делаю и сдаю', 'Собираю, проверяю и передаю код с инструкцией. 7 дней правок — бесплатно.'],
+    ],
+    reviewsTitle: ['Отзывы.', 'Что пишут покупатели на FunPay.'], allReviews: 'Все отзывы', reviewer: 'Покупатель FunPay', reviewNote: '',
+    reviews: ['Все хорошо. На все вопросы получил ответы, продавца рекомендую!', 'Быстро помогли, благодарю, всё работает.', 'Работает, продавец ответил быстро.'],
     contactTitle: ['Есть задача?', 'Напишите в Telegram.'], contactText: 'Опишите, что нужно, или пришлите ТЗ из калькулятора. Отвечаю в течение часа и называю точную цену.',
     linkSubs: [LINKS.telegramLabel, 'заказ с защитой сделки', 'лоты и автовыдача'],
   },
@@ -300,6 +457,16 @@ const T = {
       ['What do I get at the end?', 'Full source code, setup instructions and 7 days of free fixes. If you like, I will run it on 24/7 hosting.'],
       ['Can it be extended later?', 'Yes. The code is yours, and I can add new features at any time at the listed rates.'],
     ],
+    proof: ['seller rating on FunPay', 'buyer reviews', 'services on Kwork', 'project price'],
+    processTitle: ['How I work.', 'Price and deadline before we start.'],
+    processLead: 'No endless back-and-forth: you describe the task, I ask a couple of questions and name the exact price.',
+    steps: [
+      ['You write', 'Describe the task on Telegram, Kwork or FunPay. Examples and screenshots speed things up a lot.'],
+      ['We agree', 'I clarify the details and name the price and deadline. I start once everything is clear to both of us.'],
+      ['I build and deliver', 'I build, test and hand over the code with instructions. 7 days of fixes are free.'],
+    ],
+    reviewsTitle: ['Reviews.', 'What buyers say on FunPay.'], allReviews: 'All reviews', reviewer: 'FunPay buyer', reviewNote: 'Translated from Russian',
+    reviews: ['All good. I got answers to every question, I recommend this seller!', 'Helped quickly, thank you, everything works.', 'Works, the seller replied quickly.'],
     contactTitle: ['Got a task?', 'Message me on Telegram.'], contactText: 'Describe what you need or send the brief from the calculator. I reply within an hour with an exact price.',
     linkSubs: [LINKS.telegramLabel, 'deal protection', 'listings & instant delivery'],
   },
@@ -340,6 +507,16 @@ const T = {
       ['¿Qué recibo al final?', 'Código fuente completo, instrucciones de instalación y 7 días de ajustes gratis. Si quieres, lo dejo funcionando en hosting 24/7.'],
       ['¿Se puede ampliar después?', 'Sí. El código es tuyo y puedo añadir funciones nuevas en cualquier momento según la tarifa.'],
     ],
+    proof: ['valoración en FunPay', 'reseñas de compradores', 'servicios en Kwork', 'precio del proyecto'],
+    processTitle: ['Cómo trabajo.', 'Precio y plazo antes de empezar.'],
+    processLead: 'Sin conversaciones eternas: describes la tarea, hago un par de preguntas y te doy el precio exacto.',
+    steps: [
+      ['Escribes', 'Describe la tarea por Telegram, Kwork o FunPay. Los ejemplos y capturas aceleran mucho el trabajo.'],
+      ['Acordamos', 'Aclaro los detalles y te doy precio y plazo. Empiezo cuando todo está claro para ambos.'],
+      ['Desarrollo y entrego', 'Construyo, pruebo y entrego el código con instrucciones. 7 días de ajustes gratis.'],
+    ],
+    reviewsTitle: ['Reseñas.', 'Lo que dicen los compradores en FunPay.'], allReviews: 'Todas las reseñas', reviewer: 'Comprador de FunPay', reviewNote: 'Traducido del ruso',
+    reviews: ['Todo bien. Respondió a todas mis preguntas, ¡recomiendo al vendedor!', 'Me ayudaron rápido, gracias, todo funciona.', 'Funciona, el vendedor respondió rápido.'],
     contactTitle: ['¿Tienes una tarea?', 'Escríbeme por Telegram.'], contactText: 'Cuéntame qué necesitas o envía el brief de la calculadora. Respondo en menos de una hora con el precio exacto.',
     linkSubs: [LINKS.telegramLabel, 'pago protegido', 'ofertas y entrega automática'],
   },
@@ -439,20 +616,83 @@ function Services({ t }) {
   return html`<section id="services" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.servicesTitle}/>
     <div className="mt-14 grid gap-4 md:grid-cols-2">
-      ${t.services.map((s, i) => html`<article key=${i} className="reveal card lift flex flex-col p-7 sm:p-9" style=${{ '--d': `${(i % 2) * 0.08}s` }}>
+      ${t.services.map((s, i) => html`<article key=${i} className="reveal card lift flex flex-col p-2 pb-7 sm:pb-9" style=${{ '--d': `${(i % 2) * 0.08}s` }}>
+        <div className="art-frame relative h-44 overflow-hidden rounded-[22px] sm:h-52"><${Art} kind=${SERVICE_ART[i]}/></div>
+        <div className="flex flex-1 flex-col px-5 pt-6 sm:px-7">
         <div className="flex items-start justify-between gap-4">
           <span className="font-mono text-xs text-[color:var(--dim)]">0${i + 1}</span>
           <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[11px] text-[color:var(--accent)]">${t.from} ${money(t, SERVICE_PRICES[i][0])}</span>
         </div>
-        <h3 className="display mt-10 text-[clamp(24px,2.6vw,32px)] font-semibold leading-tight">${s.title}</h3>
+        <h3 className="display mt-5 text-[clamp(24px,2.6vw,32px)] font-semibold leading-tight">${s.title}</h3>
         <p className="mt-3 text-[15px] leading-relaxed text-[color:var(--muted)]">${s.text}</p>
         <ul className="mt-8 divide-y divide-[color:var(--line)] border-t border-[color:var(--line)]">
           ${s.items.map((name, j) => html`<li key=${j} className="flex items-center justify-between gap-4 py-3 text-sm">
             <span className="text-[color:var(--ink)]/85">${name}</span>
             <span className="whitespace-nowrap font-mono text-[13px] tnum text-[color:var(--ink)]">${SERVICE_PLUS[i][j] ? money(t, SERVICE_PRICES[i][j], true) : `${t.from} ${money(t, SERVICE_PRICES[i][j])}`}</span></li>`)}
         </ul>
+        </div>
       </article>`)}
     </div>
+  </section>`;
+}
+
+const Star = html`<svg width="13" height="13" viewBox="0 0 24 24" fill="#f5c76b" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg>`;
+
+function Proof({ t }) {
+  const items = [
+    [html`<span className="inline-flex items-center gap-2">${Star}${FUNPAY_STATS.rating}</span>`, t.proof[0], LINKS.funpay, true],
+    [String(FUNPAY_STATS.reviews), t.proof[1], LINKS.funpay, true],
+    [String(KWORK_COUNT), t.proof[2], LINKS.kwork, true],
+    [`${t.from} ${money(t, 600)}`, t.proof[3], '#calc', false],
+  ];
+  return html`<section className="gutter relative z-10 mx-auto -mt-2 max-w-6xl" aria-label="FunPay · Kwork">
+    <div className="proof reveal card grid grid-cols-2 overflow-hidden lg:grid-cols-4">
+      ${items.map(([v, label, href, ext], i) => html`<a key=${i} href=${href} target=${ext ? '_blank' : undefined} rel=${ext ? 'noopener' : undefined}
+        className=${`group flex items-end justify-between gap-3 px-6 py-6 sm:px-7 ${i % 2 ? '' : 'border-r'} ${i < 2 ? 'border-b lg:border-b-0' : ''} ${i === 1 ? 'lg:border-r' : ''} border-[color:var(--line)]`}>
+        <span><span className="display block text-[clamp(26px,3vw,36px)] font-semibold leading-none tnum">${v}</span>
+          <span className="mt-2 block text-[13px] text-[color:var(--muted)]">${label}</span></span>
+        <span className="text-[color:var(--dim)] transition-colors group-hover:text-[color:var(--ink)]">${ext ? Icon.ext : Icon.arrow}</span>
+      </a>`)}
+    </div>
+  </section>`;
+}
+
+function Process({ t }) {
+  const delays = ['.2s', '2.3s', '4.4s'];
+  return html`<section id="process" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+    <${Heading} lines=${t.processTitle} lead=${t.processLead} center/>
+    <div className="reveal relative mt-16">
+      <div className="track absolute left-[16.66%] right-[16.66%] top-[19px] hidden md:block"></div>
+      <ol className="relative grid gap-10 md:grid-cols-3 md:gap-8">
+        ${t.steps.map(([title, text], i) => html`<li key=${i} className="flex flex-col items-center text-center">
+          <span className="step-dot grid h-10 w-10 place-items-center rounded-full font-mono text-xs" style=${{ '--sd': delays[i] }}>0${i + 1}</span>
+          <h3 className="display mt-6 text-xl font-semibold">${title}</h3>
+          <p className="mt-2 max-w-[30ch] text-sm leading-relaxed text-[color:var(--muted)]">${text}</p>
+        </li>`)}
+      </ol>
+    </div>
+  </section>`;
+}
+
+function Reviews({ t }) {
+  return html`<section id="reviews" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+    <div className="reveal flex flex-wrap items-end justify-between gap-6">
+      <h2 className="display max-w-3xl text-[clamp(36px,5.4vw,68px)] font-semibold leading-[1.02]">${t.reviewsTitle[0]} <span className="text-[color:var(--muted)]">${t.reviewsTitle[1]}</span></h2>
+      <a href=${LINKS.funpay} target="_blank" rel="noopener" className="btn inline-flex items-center gap-2 rounded-full border border-[color:var(--line-2)] bg-white/[0.04] px-5 py-3 text-sm font-semibold hover:border-white/30">
+        ${Star} ${FUNPAY_STATS.rating} · ${t.allReviews} ${Icon.ext}</a>
+    </div>
+    <div className="mt-12 grid gap-4 md:grid-cols-3">
+      ${t.reviews.map((q, i) => html`<figure key=${i} className="reveal card lift flex flex-col justify-between p-7" style=${{ '--d': `${i * 0.08}s` }}>
+        <div>
+          <div className="flex gap-1">${[0, 1, 2, 3, 4].map(k => html`<span key=${k}>${Star}</span>`)}</div>
+          <blockquote className="display mt-5 text-[19px] font-medium leading-snug tracking-[-0.015em]">«${q}»</blockquote>
+        </div>
+        <figcaption className="mt-8 flex items-center justify-between border-t border-[color:var(--line)] pt-4 font-mono text-[11px] uppercase tracking-wider text-[color:var(--muted)]">
+          <span>${t.reviewer}</span><span className="text-[#f5c76b]">5 / 5</span>
+        </figcaption>
+      </figure>`)}
+    </div>
+    ${t.reviewNote && html`<p className="mt-4 text-xs text-[color:var(--dim)]">${t.reviewNote}</p>`}
   </section>`;
 }
 
@@ -624,8 +864,11 @@ function App() {
     <${Header} t=${t} lang=${lang} setLang=${setLang}/>
     <main>
       <${Cover} t=${t} lang=${lang}/>
+      <${Proof} t=${t}/>
       <${Services} t=${t}/>
+      <${Process} t=${t}/>
       <${Works} t=${t}/>
+      <${Reviews} t=${t}/>
       <${Calculator} t=${t} onToast=${setToast}/>
       <${Faq} t=${t}/>
     </main>
