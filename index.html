@@ -383,8 +383,46 @@ const SCENES = {
       }
     },
   },
+  /* Сайты: окно браузера, в котором из частиц собирается макет страницы */
+  browser: {
+    init() {
+      const pts = [];
+      const line = (x1, y1, x2, y2, n, g, tone) => { for (let i = 0; i <= n; i++) { const s = i / n; pts.push({ x: x1 + (x2 - x1) * s, y: y1 + (y2 - y1) * s, g, tone }); } };
+      const rect = (x1, y1, x2, y2, n, g, tone, fill = 0) => {
+        const k = Math.round(n * (x2 - x1) / ((x2 - x1) + (y2 - y1)));
+        line(x1, y1, x2, y1, k, g, tone); line(x1, y2, x2, y2, k, g, tone); line(x1, y1, x1, y2, n - k, g, tone); line(x2, y1, x2, y2, n - k, g, tone);
+        for (let i = 0; i < fill; i++) pts.push({ x: rnd(x1, x2), y: rnd(y1, y2), g, tone, f: 1 });
+      };
+      rect(-1, -0.68, 1, 0.68, 150, 0, 1);                       // рамка окна
+      line(-1, -0.5, 1, -0.5, 60, 0, 1);                         // полоса вкладок
+      [-0.93, -0.87, -0.81].forEach(x => rect(x - 0.012, -0.6, x + 0.012, -0.58, 6, 0, 2, 4));
+      rect(-0.62, -0.62, 0.3, -0.56, 30, 0, 1);                  // адресная строка
+      line(-0.86, -0.36, -0.62, -0.36, 14, 1, 0); [0.3, 0.46, 0.62].forEach(x => line(x, -0.36, x + 0.1, -0.36, 6, 1, 1));
+      line(-0.86, -0.18, 0.2, -0.18, 50, 2, 0); line(-0.86, -0.07, -0.1, -0.07, 36, 2, 0); // заголовок
+      line(-0.86, 0.04, 0.0, 0.04, 30, 2, 1);
+      rect(-0.86, 0.13, -0.56, 0.21, 24, 3, 2, 26);              // кнопка
+      rect(0.3, -0.24, 0.86, 0.22, 60, 3, 1, 70);                // картинка
+      [-0.86, -0.27, 0.32].forEach((x, i) => rect(x, 0.31, x + 0.54, 0.58, 50, 4 + i * 0.4, 0, 24)); // карточки
+      pts.forEach(p => { p.sx = rnd(-1.3, 1.3); p.sy = rnd(-0.9, 0.9); p.ph = rnd(0, 6.28); });
+      return { pts };
+    },
+    draw(ctx, w, h, t, s) {
+      const S = Math.min(w * 0.4, h * 0.62), cx = w / 2, cy = h / 2 + Math.sin(t * 0.7) * 3;
+      const cyc = (t % 9) / 9;                                    // сборка → пауза → рассыпание
+      for (const p of s.pts) {
+        const st = p.g * 0.05;
+        let k = cyc < 0.86 ? Math.min(1, Math.max(0, (cyc - st) / 0.22)) : 1 - (cyc - 0.86) / 0.14;
+        k = k * k * (3 - 2 * k);
+        const x = p.sx + (p.x - p.sx) * k + Math.sin(t * 1.2 + p.ph) * 0.012, y = p.sy + (p.y - p.sy) * k + Math.cos(t + p.ph) * 0.012;
+        const c = p.tone === 2 ? COL.c : p.tone ? COL.b : COL.a;
+        ctx.fillStyle = `rgba(${c},${(p.f ? 0.22 : 0.8) * (0.35 + 0.65 * k)})`;
+        ctx.fillRect(cx + x * S, cy + y * S, 1.6, 1.6);
+      }
+      if (cyc > 0.3 && cyc < 0.86 && (t * 1.6) % 1 < 0.55) { ctx.fillStyle = `rgba(${COL.a},0.9)`; ctx.fillRect(cx + 0.22 * S, cy - 0.2 * S, 2, 0.06 * S); } // курсор
+    },
+  },
 };
-const SERVICE_ART = ['plane', 'stream', 'network', 'torus'];
+const SERVICE_ART = ['plane', 'stream', 'network', 'torus', 'browser'];
 
 function startArt(canvas, kind) {
   const ctx = canvas.getContext('2d'); if (!ctx) return () => {};
@@ -430,10 +468,10 @@ function Art({ kind }) {
 /* ================= данные ================= */
 const FUNPAY_STATS = { rating: '5.0', reviews: 34 };   // обновлять по профилю FunPay
 const KWORK_COUNT = 6;
-const SERVICE_PRICES = [[1500, 3000, 6000], [1200, 2000, 500], [600, 1000, 2000], [800, 1000, 3000]];
-const SERVICE_PLUS = [[0, 0, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0]];
+const SERVICE_PRICES = [[1500, 3000, 6000], [1200, 2000, 500], [600, 1000, 2000], [800, 1000, 3000], [2500, 4000, 500]];
+const SERVICE_PLUS = [[0, 0, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0], [0, 0, 1]];
 const WORK_STACK = ['aiogram 3 · SQLite · Pillow', 'discord.py 2 · SQLite', 'requests · bs4 · openpyxl', 'Python · SQLite · Bot API', 'discord.py · Discord API', 'pandas · pdfplumber'];
-const TYPE_BASE = [1500, 1200, 600];
+const TYPE_BASE = [1500, 1200, 600, 2500];
 const OPTION_ADD = [700, 1000, 400, null];   // null — множитель ×1.5
 const ART = [
   'radial-gradient(70% 90% at 25% 15%, rgba(116,227,214,.55), transparent 60%), radial-gradient(60% 80% at 85% 90%, rgba(156,195,255,.45), transparent 60%), #2a2c31',
@@ -453,12 +491,13 @@ const T = {
     cta: 'Обсудить проект', cta2: 'Смотреть работы', scroll: 'Листайте вниз',
     stats: [['24/7', 'боты на хостинге'], ['7 дней', 'бесплатных правок'], ['100%', 'исходный код']],
     from: 'от',
-    servicesTitle: ['Услуги.', 'Четыре направления, одна планка качества.'],
+    servicesTitle: ['Услуги.', 'Пять направлений, одна планка качества.'],
     services: [
       { title: 'Telegram-боты и Mini Apps', text: 'Боты на aiogram 3 с базой данных, оплатой и автовыдачей, админкой в самом боте и веб-интерфейсом Mini Apps.', items: ['Бот с меню и ответами', 'Магазин, запись или заявки с базой', 'Mini App с веб-интерфейсом'] },
       { title: 'Парсеры и автоматизация', text: 'Сбор данных в Excel и Google Таблицы, мониторинг объявлений и цен с уведомлениями в Telegram.', items: ['Парсер одного сайта', 'Мониторинг с уведомлениями', 'Запуск по расписанию'] },
       { title: 'Discord под ключ', text: 'Структура сервера, роли и права, тикеты, уровни и модерация, свои боты на discord.py.', items: ['Настройка ролей и прав', 'Сервер под ключ', 'Свой бот для сервера'] },
       { title: 'Игровой моддинг', text: 'Калибровка физики и моторов в JBeam, механики и скрипты на Lua, чтобы техника вела себя как задумано.', items: ['Калибровка мотора или подвески', 'Скрипт или механика на Lua', 'Мод с нуля'] },
+      { title: 'Сайты и лендинги', text: 'Лендинги и сайты-портфолио с живыми анимациями, адаптивом под телефон и несколькими языками. Выкладываю на хостинг и подключаю домен. Пример — этот сайт.', items: ['Лендинг на одну страницу', 'Сайт-портфолио с анимациями', 'Хостинг и домен'] },
     ],
     worksTitle: ['Работы.', 'Проекты, которые уже работают.'],
     works: [
@@ -472,7 +511,7 @@ const T = {
     calcTitle: ['Стоимость.', 'Посчитайте за минуту.'],
     calcLead: 'Выберите тип и опции, цена пересчитается сразу. Это ориентир, точную сумму назову после обсуждения.',
     typeLabel: 'Тип заказа', optLabel: 'Опции', noteLabel: 'Коротко о задаче', notePh: 'Например: бот для записи клиентов в барбершоп, 3 мастера',
-    types: ['Telegram-бот', 'Парсер', 'Discord-сервер'], options: ['База данных', 'Админ-панель', 'Хостинг 24/7', 'Срочно, за 24 часа'],
+    types: ['Telegram-бот', 'Парсер', 'Discord-сервер', 'Сайт или лендинг'], options: ['База данных', 'Админ-панель', 'Хостинг 24/7', 'Срочно, за 24 часа'],
     estimate: 'Ориентировочно', noType: 'Тип не выбран', pickType: 'Выберите тип заказа, чтобы увидеть цену и скопировать ТЗ.',
     copy: 'Скопировать ТЗ', copied: 'ТЗ скопировано. Отправьте его мне в Telegram', copyFail: 'Не удалось скопировать: текст выделен, нажмите Ctrl+C',
     brief: { title: 'ТЗ для DanivaL', type: 'Тип заказа', opts: 'Опции', none: 'без доп. опций', urgent: 'Срочность', yes: 'да, за 24 часа', no: 'обычный срок', price: 'Ориентировочная стоимость', desc: 'Описание задачи', descPh: '(опишите, что должно получиться)' },
@@ -504,12 +543,13 @@ const T = {
     cta: 'Discuss a project', cta2: 'View work', scroll: 'Scroll down',
     stats: [['24/7', 'hosted bots'], ['7 days', 'of free fixes'], ['100%', 'source code']],
     from: 'from',
-    servicesTitle: ['Services.', 'Four directions, one standard of quality.'],
+    servicesTitle: ['Services.', 'Five directions, one standard of quality.'],
     services: [
       { title: 'Telegram bots & Mini Apps', text: 'aiogram 3 bots with databases, payments and instant delivery, an admin panel inside the bot and Mini App web interfaces.', items: ['Bot with menus and replies', 'Shop, bookings or leads with a database', 'Mini App with a web interface'] },
       { title: 'Scrapers & automation', text: 'Data collection into Excel and Google Sheets, listing and price monitoring with Telegram alerts.', items: ['Scraper for one website', 'Monitoring with alerts', 'Scheduled runs'] },
       { title: 'Turnkey Discord', text: 'Server structure, roles and permissions, tickets, levels and moderation, custom discord.py bots.', items: ['Roles and permissions setup', 'Turnkey server', 'Custom server bot'] },
       { title: 'Game modding', text: 'Physics and engine tuning in JBeam, mechanics and Lua scripts, so vehicles behave exactly as intended.', items: ['Engine or suspension tuning', 'Lua script or mechanic', 'Mod from scratch'] },
+      { title: 'Websites and landing pages', text: 'Landing pages and portfolio sites with smooth animations, mobile-friendly layout and several languages. I deploy them to hosting and connect a domain. Example: this site.', items: ['One-page landing', 'Animated portfolio site', 'Hosting and domain'] },
     ],
     worksTitle: ['Work.', 'Projects that already run.'],
     works: [
@@ -523,7 +563,7 @@ const T = {
     calcTitle: ['Pricing.', 'Estimate it in a minute.'],
     calcLead: 'Pick a type and options, the price updates instantly. It is an estimate; I confirm the exact amount after we talk.',
     typeLabel: 'Project type', optLabel: 'Options', noteLabel: 'About the task', notePh: 'For example: a booking bot for a barbershop with 3 barbers',
-    types: ['Telegram bot', 'Scraper', 'Discord server'], options: ['Database', 'Admin panel', '24/7 hosting', 'Urgent, within 24 hours'],
+    types: ['Telegram bot', 'Scraper', 'Discord server', 'Website or landing'], options: ['Database', 'Admin panel', '24/7 hosting', 'Urgent, within 24 hours'],
     estimate: 'Estimate', noType: 'No type selected', pickType: 'Pick a project type to see the price and copy the brief.',
     copy: 'Copy the brief', copied: 'Brief copied. Send it to me on Telegram', copyFail: 'Could not copy: the text is selected, press Ctrl+C',
     brief: { title: 'Brief for DanivaL', type: 'Project type', opts: 'Options', none: 'no extra options', urgent: 'Urgency', yes: 'yes, within 24 hours', no: 'regular timeline', price: 'Estimated price', desc: 'Task description', descPh: '(describe the result you need)' },
@@ -555,12 +595,13 @@ const T = {
     cta: 'Hablemos', cta2: 'Ver trabajos', scroll: 'Desliza hacia abajo',
     stats: [['24/7', 'bots en hosting'], ['7 días', 'de ajustes gratis'], ['100%', 'código fuente']],
     from: 'desde',
-    servicesTitle: ['Servicios.', 'Cuatro áreas, un mismo nivel de calidad.'],
+    servicesTitle: ['Servicios.', 'Cinco áreas, un mismo nivel de calidad.'],
     services: [
       { title: 'Bots de Telegram y Mini Apps', text: 'Bots con aiogram 3: base de datos, pagos y entrega automática, panel de administración en el propio bot y Mini Apps web.', items: ['Bot con menús y respuestas', 'Tienda, reservas o solicitudes', 'Mini App con interfaz web'] },
       { title: 'Scrapers y automatización', text: 'Recolección de datos en Excel y Google Sheets, seguimiento de anuncios y precios con avisos en Telegram.', items: ['Scraper de un sitio', 'Seguimiento con avisos', 'Ejecución programada'] },
       { title: 'Discord completo', text: 'Estructura del servidor, roles y permisos, tickets, niveles y moderación, bots propios con discord.py.', items: ['Roles y permisos', 'Servidor completo', 'Bot propio para el servidor'] },
       { title: 'Modding de juegos', text: 'Ajuste de física y motores en JBeam, mecánicas y scripts en Lua para que los vehículos se comporten como deben.', items: ['Ajuste de motor o suspensión', 'Script o mecánica en Lua', 'Mod desde cero'] },
+      { title: 'Sitios web y landings', text: 'Landings y sitios de portafolio con animaciones fluidas, diseño adaptado al móvil y varios idiomas. Los publico en un hosting y conecto el dominio. Ejemplo: este sitio.', items: ['Landing de una página', 'Portafolio con animaciones', 'Hosting y dominio'] },
     ],
     worksTitle: ['Trabajos.', 'Proyectos que ya funcionan.'],
     works: [
@@ -574,7 +615,7 @@ const T = {
     calcTitle: ['Precios.', 'Calcúlalo en un minuto.'],
     calcLead: 'Elige el tipo y las opciones, el precio se actualiza al instante. Es una estimación; confirmo el importe exacto tras hablar.',
     typeLabel: 'Tipo de proyecto', optLabel: 'Opciones', noteLabel: 'Sobre la tarea', notePh: 'Por ejemplo: bot de reservas para una barbería con 3 barberos',
-    types: ['Bot de Telegram', 'Scraper', 'Servidor Discord'], options: ['Base de datos', 'Panel de admin', 'Hosting 24/7', 'Urgente, en 24 horas'],
+    types: ['Bot de Telegram', 'Scraper', 'Servidor Discord', 'Sitio o landing'], options: ['Base de datos', 'Panel de admin', 'Hosting 24/7', 'Urgente, en 24 horas'],
     estimate: 'Estimación', noType: 'Sin tipo elegido', pickType: 'Elige un tipo de proyecto para ver el precio y copiar el brief.',
     copy: 'Copiar el brief', copied: 'Brief copiado. Envíamelo por Telegram', copyFail: 'No se pudo copiar: el texto está seleccionado, pulsa Ctrl+C',
     brief: { title: 'Brief para DanivaL', type: 'Tipo de proyecto', opts: 'Opciones', none: 'sin opciones extra', urgent: 'Urgencia', yes: 'sí, en 24 horas', no: 'plazo normal', price: 'Precio estimado', desc: 'Descripción', descPh: '(describe el resultado que necesitas)' },
@@ -706,9 +747,9 @@ function Services({ t }) {
   return html`<section id="services" className="gutter mx-auto wrap scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.servicesTitle}/>
     <div className="mt-14 grid gap-4 md:grid-cols-2">
-      ${t.services.map((s, i) => html`<article key=${i} className="reveal card lift flex flex-col p-2 pb-7 sm:pb-9" style=${{ '--d': `${(i % 2) * 0.08}s` }}>
-        <div className="art-frame relative h-44 overflow-hidden rounded-[22px] sm:h-52 xl:h-64"><${Art} kind=${SERVICE_ART[i]}/></div>
-        <div className="flex flex-1 flex-col px-5 pt-6 sm:px-7">
+      ${t.services.map((s, i) => { const wide = i === 4; return html`<article key=${i} className=${`reveal card lift flex flex-col p-2 pb-7 sm:pb-9 ${wide ? 'md:col-span-2 lg:flex-row lg:pb-2' : ''}`} style=${{ '--d': `${(i % 2) * 0.08}s` }}>
+        <div className=${`art-frame relative h-44 overflow-hidden rounded-[22px] sm:h-52 xl:h-64 ${wide ? 'lg:!h-auto lg:min-h-[340px] lg:w-1/2 lg:shrink-0' : ''}`}><${Art} kind=${SERVICE_ART[i]}/></div>
+        <div className=${`flex flex-1 flex-col px-5 pt-6 sm:px-7 ${wide ? 'lg:justify-center lg:px-10 lg:py-8' : ''}`}>
         <div className="flex items-start justify-between gap-4">
           <span className="font-mono text-xs text-[color:var(--dim)]">0${i + 1}</span>
           <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[11px] text-[color:var(--accent)]">${t.from} ${money(t, SERVICE_PRICES[i][0])}</span>
@@ -721,7 +762,7 @@ function Services({ t }) {
             <span className="whitespace-nowrap font-mono text-[13px] tnum text-[color:var(--ink)]">${SERVICE_PLUS[i][j] ? money(t, SERVICE_PRICES[i][j], true) : `${t.from} ${money(t, SERVICE_PRICES[i][j])}`}</span></li>`)}
         </ul>
         </div>
-      </article>`)}
+      </article>`; })}
     </div>
   </section>`;
 }
@@ -852,7 +893,7 @@ function Calculator({ t, onToast }) {
     <div className="reveal card mt-14 grid overflow-hidden lg:grid-cols-[1.3fr_1fr]">
       <div className="p-6 sm:p-10">
         <p className="eyebrow">${t.typeLabel}</p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-3" role="group" aria-label=${t.typeLabel}>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4" role="group" aria-label=${t.typeLabel}>
           ${t.types.map((label, i) => html`<button key=${i} onClick=${() => setType(i)} aria-pressed=${type === i}
             className=${`flex flex-col items-start gap-1 rounded-2xl border px-4 py-4 text-left transition-colors duration-300 ${type === i ? 'border-transparent bg-[color:var(--ink)] text-[#1d1e22]' : 'border-[color:var(--line)] bg-white/[0.02] hover:border-[color:var(--line-2)]'}`}>
             <span className="text-sm font-semibold">${label}</span>
@@ -925,7 +966,7 @@ function Contact({ t }) {
     </div>
     <div className="mt-12 flex flex-wrap items-center justify-between gap-4 text-xs text-[color:var(--dim)]">
       <span>© ${new Date().getFullYear()} ${BRAND}</span>
-      <span className="font-mono">Python · Telegram · Discord</span>
+      <span className="font-mono">Python · Telegram · Discord · Web</span>
     </div>
   </footer>`;
 }
