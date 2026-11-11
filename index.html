@@ -42,13 +42,54 @@
     --dim: #6c6d74;
     --accent: #9cc3ff;
     --teal: #74e3d6;
+    --glass: rgba(29, 30, 34, .7);
+    --hero-bg: radial-gradient(60% 55% at 50% 48%, #2d2f35 0%, #23252a 45%, #1d1e22 80%);
+    --contact-bg: radial-gradient(70% 90% at 50% 0%, rgba(116,227,214,.16), transparent 60%), radial-gradient(60% 80% at 50% 100%, rgba(156,195,255,.14), transparent 60%), var(--card);
+    --art-bg: radial-gradient(80% 90% at 50% 40%, #24262c 0%, #1b1c20 75%);
+    --grad: linear-gradient(90deg, #8fd8ff, #a98bff 45%, #ff7ac6 80%, #ffb36b);
   }
+  /* «Ярко»: тёплый тёмно-фиолетовый фон, цветные пятна, переливающиеся заголовки */
+  :root[data-theme="vivid"] {
+    --bg: #16141c;
+    --card: #201d28;
+    --card-2: #282432;
+    --line: rgba(214, 190, 255, 0.10);
+    --line-2: rgba(214, 190, 255, 0.22);
+    --muted: #aaa3ba;
+    --dim: #756e83;
+    --accent: #8fd8ff;
+    --glass: rgba(22, 20, 28, .7);
+    --hero-bg: radial-gradient(45% 45% at 22% 30%, rgba(124,92,255,.22), transparent 70%), radial-gradient(40% 45% at 80% 70%, rgba(255,95,162,.16), transparent 70%), radial-gradient(60% 55% at 50% 48%, #2b2338 0%, #201b2b 45%, #16141c 80%);
+    --contact-bg: radial-gradient(70% 90% at 15% 0%, rgba(124,92,255,.35), transparent 60%), radial-gradient(60% 80% at 90% 100%, rgba(255,95,162,.28), transparent 60%), radial-gradient(50% 60% at 60% 40%, rgba(54,214,255,.12), transparent 60%), var(--card);
+    --art-bg: radial-gradient(80% 90% at 50% 40%, #2b2338 0%, #1a1720 75%);
+  }
+  body, .card, header > div { transition: background-color .6s ease, border-color .6s ease, color .6s ease; }
+  .ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: 0; transition: opacity .8s ease;
+    background: radial-gradient(40% 35% at 8% 35%, rgba(124,92,255,.16), transparent 70%), radial-gradient(35% 35% at 95% 55%, rgba(255,95,162,.12), transparent 70%), radial-gradient(40% 35% at 40% 95%, rgba(54,214,255,.10), transparent 70%); }
+  #root { position: relative; z-index: 1; }
+  [data-theme="vivid"] .ambient { opacity: 1; }
+  [data-theme="vivid"] .hl-plain, [data-theme="vivid"] .hl .w > span, [data-theme="vivid"] .pv {
+    background-image: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  [data-theme="vivid"] h1.rise { text-shadow: 0 0 90px rgba(255,95,162,.35), 0 0 40px rgba(124,92,255,.35) !important; }
+  [data-theme="vivid"] .card { background-image: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,0)); }
+  [data-theme="vivid"] .card.lift:hover { box-shadow: 0 30px 70px -40px rgba(124,92,255,.65); border-color: rgba(255,122,198,.35); }
+  [data-theme="vivid"] .btn[class*="bg-[color:var(--ink)]"],
+  [data-theme="vivid"] button[aria-pressed="true"][class*="bg-[color:var(--ink)]"] {
+    background-image: linear-gradient(100deg, #7c5cff, #ff5fa2); color: #fff; box-shadow: 0 10px 30px -12px rgba(255,95,162,.6); }
+  [data-theme="vivid"] button[aria-pressed="true"][class*="bg-[color:var(--ink)]"] span { color: rgba(255,255,255,.85); }
+  [data-theme="vivid"] .track::after { background: linear-gradient(90deg, transparent, #36d6ff, #ff5fa2, transparent); }
+  [data-theme="vivid"] .eyebrow { color: #c3b6e0; }
+  .swatch { width: 14px; height: 14px; border-radius: 999px; }
   html { scroll-behavior: smooth; }
   body { background: var(--bg); color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
   body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 60; background: var(--bg); }
   h1, h2, h3 { text-wrap: balance; overflow-wrap: break-word; hyphens: auto; }
   .tnum { font-variant-numeric: tabular-nums; }
-  .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .gutter { padding-left: max(16px, env(safe-area-inset-left, 0px), 3.5vw); padding-right: max(16px, env(safe-area-inset-right, 0px), 3.5vw); }
+  /* на больших мониторах весь сайт плавно крупнеет (Tailwind считает размеры от корневого шрифта) */
+  @media (min-width: 1800px) { html { font-size: 17px; } }
+  @media (min-width: 2400px) { html { font-size: 18px; } }
+  .wrap { max-width: min(1520px, 100%); }
   .display { font-family: "Inter Tight", Inter, ui-sans-serif, sans-serif; letter-spacing: -0.035em; }
   .eyebrow { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--muted); }
 
@@ -58,7 +99,7 @@
 
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 28px; transition: transform .6s cubic-bezier(.16, 1, .3, 1), border-color .4s ease, background-color .4s ease; }
   .card.lift:hover { transform: translate3d(0, -4px, 0); border-color: var(--line-2); background: var(--card-2); }
-  .art-frame { background: radial-gradient(80% 90% at 50% 40%, #24262c 0%, #1b1c20 75%); }
+  .art-frame { background: var(--art-bg); }
 
   /* process: a soft light travels along the line, each step lights up as it passes */
   .track { position: relative; height: 1px; background: var(--line-2); overflow: hidden; }
@@ -124,6 +165,7 @@
 </style>
 
 <div class="grain" aria-hidden="true"></div>
+<div class="ambient" aria-hidden="true"></div>
 <div id="root"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
@@ -178,11 +220,12 @@ void main(){
 }`;
   const FS = `
 precision mediump float;
+uniform vec3 uA, uB, uC;
 varying float vA, vT, vF;
 void main(){
   float m = smoothstep(.5, .08, length(gl_PointCoord - .5));
-  vec3 col = mix(vec3(.30, .86, .84), vec3(.42, .56, 1.), vT);
-  col = mix(col, vec3(.88, .94, 1.), smoothstep(.7, 1., vF) * .55);
+  vec3 col = mix(uA, uB, vT);
+  col = mix(col, uC, smoothstep(.7, 1., vF) * .55);
   float a = m * vA * 1.15;
   gl_FragColor = vec4(col * a, a);
 }`;
@@ -197,7 +240,7 @@ void main(){
   gl.useProgram(prog);
   const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, 'aP'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 4, gl.FLOAT, false, 0, 0);
-  const U = {}; ['uTime', 'uIntro', 'uPx', 'uTilt', 'uS'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
+  const U = {}; ['uTime', 'uIntro', 'uPx', 'uTilt', 'uS', 'uA', 'uB', 'uC'].forEach(n => U[n] = gl.getUniformLocation(prog, n));
   gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE);
   gl.clearColor(0, 0, 0, 0);
 
@@ -216,6 +259,7 @@ void main(){
   }
   function draw(t, intro) {
     gl.uniform1f(U.uTime, t); gl.uniform1f(U.uIntro, intro); gl.uniform2f(U.uTilt, tilt.x, tilt.y);
+    gl.uniform3fv(U.uA, PAL.cloud[0]); gl.uniform3fv(U.uB, PAL.cloud[1]); gl.uniform3fv(U.uC, PAL.cloud[2]);
     gl.clear(gl.COLOR_BUFFER_BIT); gl.drawArrays(gl.POINTS, 0, N);
   }
   function loop() {
@@ -231,12 +275,13 @@ void main(){
   const io = new IntersectionObserver(([en]) => { onScreen = en.isIntersecting; go(); });
   io.observe(host);
   size(); if (REDUCED) draw(12, 1); else go();
-  addEventListener('pointermove', onMove, { passive: true }); document.addEventListener('visibilitychange', onVis);
-  return () => { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); removeEventListener('pointermove', onMove); document.removeEventListener('visibilitychange', onVis); };
+  const onTheme = () => { if (REDUCED) draw(12, 1); };
+  addEventListener('pointermove', onMove, { passive: true }); document.addEventListener('visibilitychange', onVis); addEventListener('themechange', onTheme);
+  return () => { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); removeEventListener('pointermove', onMove); document.removeEventListener('visibilitychange', onVis); removeEventListener('themechange', onTheme); };
 }
 
 /* ================= Рисунки в карточках услуг (Canvas 2D, крутятся только когда карточка видна) ================= */
-const C_TEAL = '116,227,214', C_BLUE = '156,195,255', C_VIOLET = '170,150,255';
+const COL = { a: '116,227,214', b: '156,195,255', c: '170,150,255' };   // меняется вместе с темой
 const rnd = (a, b) => a + Math.random() * (b - a);
 
 const SCENES = {
@@ -259,12 +304,12 @@ const SCENES = {
       for (let i = 0; i < 46; i++) {           // пунктирный след
         const k = i / 46, x = cx - S * 0.75 - i * (w * 0.011) - ((t * 18) % (w * 0.011));
         const y = cy + S * 0.22 + Math.sin(i * 0.22 - t * 1.6) * 12 * k + k * k * 18;
-        ctx.fillStyle = `rgba(${C_BLUE},${0.5 * (1 - k)})`; ctx.fillRect(x, y, 2, 2);
+        ctx.fillStyle = `rgba(${COL.b},${0.5 * (1 - k)})`; ctx.fillRect(x, y, 2, 2);
       }
       for (const p of s.pts) {
         const jx = p.x + Math.sin(t * 1.3 + p.ph) * 0.018, jy = p.y + Math.cos(t * 1.1 + p.ph) * 0.018;
         const x = cx + (jx * cr - jy * sr) * S, y = cy + (jx * sr + jy * cr) * S;
-        ctx.fillStyle = `rgba(${p.tone ? C_BLUE : C_TEAL},${p.f ? 0.32 : 0.85})`; ctx.fillRect(x, y, 1.6, 1.6);
+        ctx.fillStyle = `rgba(${p.tone ? COL.b : COL.a},${p.f ? 0.32 : 0.85})`; ctx.fillRect(x, y, 1.6, 1.6);
       }
     },
   },
@@ -274,7 +319,7 @@ const SCENES = {
     draw(ctx, w, h, t, s) {
       const dt = s.last ? Math.min(0.05, t - s.last) : 0; s.last = t;
       const gx = w * 0.6, top = h * 0.16, bot = h * 0.84, cols = 4;
-      ctx.fillStyle = `rgba(${C_BLUE},0.06)`;
+      ctx.fillStyle = `rgba(${COL.b},0.06)`;
       for (let r = 0; r <= s.lanes; r++) ctx.fillRect(gx, top + (bot - top) * (r / s.lanes) - 0.5 * (bot - top) / s.lanes, w - gx - 14, 1);
       for (let c = 0; c <= cols; c++) ctx.fillRect(gx + (w - gx - 14) * (c / cols), top - (bot - top) / s.lanes / 2, 1, bot - top + (bot - top) / s.lanes);
       for (const p of s.pts) {
@@ -283,8 +328,8 @@ const SCENES = {
         if (p.x < gx) {
           const ch = 1 - p.x / gx;
           const y = ly + Math.sin(p.x * 0.03 + t * 1.4 + p.ph) * 22 * ch + Math.cos(p.x * 0.012 + p.ph * 2) * 16 * ch;
-          ctx.fillStyle = `rgba(${C_TEAL},${0.35 + 0.5 * (1 - ch)})`; ctx.fillRect(p.x, y, 1.8, 1.8);
-        } else { ctx.fillStyle = `rgba(${C_BLUE},0.85)`; ctx.fillRect(p.x, ly - 1, 6, 2); }
+          ctx.fillStyle = `rgba(${COL.a},${0.35 + 0.5 * (1 - ch)})`; ctx.fillRect(p.x, y, 1.8, 1.8);
+        } else { ctx.fillStyle = `rgba(${COL.b},0.85)`; ctx.fillRect(p.x, ly - 1, 6, 2); }
       }
     },
   },
@@ -306,7 +351,7 @@ const SCENES = {
       const dt = s.last ? Math.min(0.05, t - s.last) : 0; s.last = t;
       const rx = Math.min(w * 0.36, h * 0.62), ry = h * 0.36, cx = w / 2, cy = h / 2;
       const P = s.nodes.map(n => [cx + (n.x + Math.sin(t * 0.8 + n.ph) * 0.025) * rx, cy + (n.y + Math.cos(t * 0.7 + n.ph) * 0.03) * ry]);
-      ctx.strokeStyle = `rgba(${C_BLUE},0.16)`; ctx.lineWidth = 1; ctx.beginPath();
+      ctx.strokeStyle = `rgba(${COL.b},0.16)`; ctx.lineWidth = 1; ctx.beginPath();
       for (const [a, b] of s.edges) { ctx.moveTo(P[a][0], P[a][1]); ctx.lineTo(P[b][0], P[b][1]); } ctx.stroke();
       for (const q of s.pulses) {
         q.p += dt * 0.55;
@@ -314,12 +359,12 @@ const SCENES = {
           q.e = next[Math.random() * next.length | 0]; q.dir = q.e[0] === end; q.p = 0; }
         const [a, b] = q.dir ? [q.e[0], q.e[1]] : [q.e[1], q.e[0]];
         const x = P[a][0] + (P[b][0] - P[a][0]) * q.p, y = P[a][1] + (P[b][1] - P[a][1]) * q.p;
-        ctx.fillStyle = `rgba(${C_TEAL},0.18)`; ctx.beginPath(); ctx.arc(x, y, 6, 0, 6.283); ctx.fill();
-        ctx.fillStyle = `rgba(${C_TEAL},0.9)`; ctx.beginPath(); ctx.arc(x, y, 1.8, 0, 6.283); ctx.fill();
+        ctx.fillStyle = `rgba(${COL.a},0.18)`; ctx.beginPath(); ctx.arc(x, y, 6, 0, 6.283); ctx.fill();
+        ctx.fillStyle = `rgba(${COL.a},0.9)`; ctx.beginPath(); ctx.arc(x, y, 1.8, 0, 6.283); ctx.fill();
       }
-      s.nodes.forEach((n, i) => { ctx.fillStyle = `rgba(${i ? C_BLUE : C_VIOLET},${i ? 0.75 : 0.95})`; ctx.beginPath(); ctx.arc(P[i][0], P[i][1], n.r, 0, 6.283); ctx.fill(); });
+      s.nodes.forEach((n, i) => { ctx.fillStyle = `rgba(${i ? COL.b : COL.c},${i ? 0.75 : 0.95})`; ctx.beginPath(); ctx.arc(P[i][0], P[i][1], n.r, 0, 6.283); ctx.fill(); });
       const k = (t * 0.45) % 1;
-      ctx.strokeStyle = `rgba(${C_VIOLET},${0.45 * (1 - k)})`; ctx.beginPath(); ctx.arc(P[0][0], P[0][1], 8 + k * 34, 0, 6.283); ctx.stroke();
+      ctx.strokeStyle = `rgba(${COL.c},${0.45 * (1 - k)})`; ctx.beginPath(); ctx.arc(P[0][0], P[0][1], 8 + k * 34, 0, 6.283); ctx.stroke();
     },
   },
   /* Моддинг: вращающееся колесо-тор из точек */
@@ -333,7 +378,7 @@ const SCENES = {
         let y2 = y * cb - z * sb, z2 = y * sb + z * cb;
         let x3 = x * ca + z2 * sa, z3 = -x * sa + z2 * ca;
         const f = 3 / (3 - z3), front = (z3 + 1.4) / 2.8;
-        ctx.fillStyle = `rgba(${front > 0.55 ? C_TEAL : C_BLUE},${0.15 + 0.7 * front})`;
+        ctx.fillStyle = `rgba(${front > 0.55 ? COL.a : COL.b},${0.15 + 0.7 * front})`;
         ctx.fillRect(cx + x3 * S * f, cy + y2 * S * f, 1.4 * f, 1.4 * f);
       }
     },
@@ -355,9 +400,26 @@ function startArt(canvas, kind) {
   };
   const ro = new ResizeObserver(size); ro.observe(canvas);
   const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; go(); }); io.observe(canvas);
-  document.addEventListener('visibilitychange', go);
-  return () => { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', go); };
+  const onTheme = () => { if (state && (REDUCED || !onScreen)) draw(6); };
+  document.addEventListener('visibilitychange', go); addEventListener('themechange', onTheme);
+  return () => { cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); document.removeEventListener('visibilitychange', go); removeEventListener('themechange', onTheme); };
 }
+
+/* ================= темы: «Классика» и «Ярко» ================= */
+const PALETTES = {
+  classic: { cloud: [[0.30, 0.86, 0.84], [0.42, 0.56, 1.0], [0.88, 0.94, 1.0]], art: { a: '116,227,214', b: '156,195,255', c: '170,150,255' } },
+  vivid: { cloud: [[0.62, 0.42, 1.0], [1.0, 0.36, 0.70], [0.45, 0.92, 1.0]], art: { a: '255,122,205', b: '150,128,255', c: '90,222,255' } },
+};
+const THEMES = ['classic', 'vivid'];
+let PAL = PALETTES.classic;
+function applyTheme(mode) {
+  PAL = PALETTES[mode] || PALETTES.classic;
+  Object.assign(COL, PAL.art);
+  if (mode === 'vivid') document.documentElement.dataset.theme = 'vivid'; else delete document.documentElement.dataset.theme;
+  dispatchEvent(new Event('themechange'));
+}
+const INITIAL_THEME = (() => { try { const s = localStorage.getItem('de-theme'); if (THEMES.includes(s)) return s; } catch {} return 'classic'; })();
+applyTheme(INITIAL_THEME);
 
 function Art({ kind }) {
   const ref = useRef(null);
@@ -386,6 +448,7 @@ const T = {
   ru: {
     locale: 'ru-RU', currency: 'RUB', name: 'Русский',
     nav: ['Услуги', 'Работы', 'Стоимость', 'Вопросы'], navCta: 'Написать', status: 'Свободен для заказов',
+    theme: ['Классика', 'Ярко'], themeLabel: 'Цвета сайта',
     intro: 'Портфолио', sub: ['Разработка ботов, парсеров', 'и инфраструктуры.'],
     cta: 'Обсудить проект', cta2: 'Смотреть работы', scroll: 'Листайте вниз',
     stats: [['24/7', 'боты на хостинге'], ['7 дней', 'бесплатных правок'], ['100%', 'исходный код']],
@@ -436,6 +499,7 @@ const T = {
   en: {
     locale: 'en-US', currency: 'USD', name: 'English',
     nav: ['Services', 'Work', 'Pricing', 'FAQ'], navCta: 'Contact', status: 'Available for work',
+    theme: ['Classic', 'Vivid'], themeLabel: 'Site colors',
     intro: 'Portfolio', sub: ['Building bots, scrapers', 'and infrastructure.'],
     cta: 'Discuss a project', cta2: 'View work', scroll: 'Scroll down',
     stats: [['24/7', 'hosted bots'], ['7 days', 'of free fixes'], ['100%', 'source code']],
@@ -486,6 +550,7 @@ const T = {
   es: {
     locale: 'es-ES', currency: 'USD', name: 'Español',
     nav: ['Servicios', 'Trabajos', 'Precios', 'Preguntas'], navCta: 'Escribir', status: 'Disponible',
+    theme: ['Clásico', 'Vivo'], themeLabel: 'Colores del sitio',
     intro: 'Portafolio', sub: ['Desarrollo de bots, scrapers', 'e infraestructura.'],
     cta: 'Hablemos', cta2: 'Ver trabajos', scroll: 'Desliza hacia abajo',
     stats: [['24/7', 'bots en hosting'], ['7 días', 'de ajustes gratis'], ['100%', 'código fuente']],
@@ -550,14 +615,20 @@ const Icon = {
 };
 
 /* ================= разделы ================= */
-function Header({ t, lang, setLang }) {
+function Header({ t, lang, setLang, theme, setTheme }) {
+  const swatch = ['linear-gradient(135deg, #3a3c43, #9c9da4)', 'linear-gradient(135deg, #7c5cff, #ff5fa2 60%, #36d6ff)'];
   return html`<header className="gutter fixed inset-x-0 z-50 flex justify-center" style=${{ top: 'calc(env(safe-area-inset-top, 0px) + 14px)' }}>
-    <div className="flex w-full max-w-5xl items-center justify-between gap-3 rounded-full border border-[color:var(--line)] bg-[#1d1e22]/70 py-2 pl-5 pr-2 backdrop-blur-xl">
+    <div className="flex w-full wrap items-center justify-between gap-3 rounded-full border border-[color:var(--line)] bg-[color:var(--glass)] py-2 pl-5 pr-2 backdrop-blur-xl">
       <a href="#top" className="display text-[17px] font-semibold tracking-tight">${BRAND}</a>
       <nav className="hidden items-center gap-7 text-[13px] text-[color:var(--muted)] md:flex" aria-label="Menu">
         ${['#services', '#works', '#calc', '#faq'].map((h, i) => html`<a key=${h} href=${h} className="transition-colors hover:text-[color:var(--ink)]">${t.nav[i]}</a>`)}
       </nav>
       <div className="flex items-center gap-2">
+        <div className="flex items-center gap-0.5 rounded-full bg-white/[0.05] p-1" role="group" aria-label=${t.themeLabel}>
+          ${THEMES.map((m, i) => html`<button key=${m} onClick=${() => setTheme(m)} aria-pressed=${theme === m} title=${t.theme[i]} aria-label=${t.theme[i]}
+            className=${`grid h-7 w-7 place-items-center rounded-full transition-colors duration-300 ${theme === m ? 'bg-white/[0.12]' : 'hover:bg-white/[0.06]'}`}>
+            <span className=${`swatch transition-transform duration-300 ${theme === m ? 'scale-110' : 'scale-90 opacity-70'}`} style=${{ background: swatch[i] }}></span></button>`)}
+        </div>
         <div className="flex items-center rounded-full bg-white/[0.05] p-1" role="group" aria-label="Language">
           ${LANGS.map(l => html`<button key=${l} onClick=${() => setLang(l)} aria-pressed=${lang === l} title=${T[l].name}
             className=${`rounded-full px-2.5 py-1 font-mono text-[11px] uppercase tracking-wider transition-colors duration-300 ${lang === l ? 'bg-[color:var(--ink)] text-[#1d1e22]' : 'text-[color:var(--muted)] hover:text-[color:var(--ink)]'}`}>${l}</button>`)}
@@ -585,12 +656,12 @@ function Cover({ t, lang }) {
     };
     addEventListener('scroll', on, { passive: true }); return () => removeEventListener('scroll', on);
   }, []);
-  return html`<section id="top" ref=${host} className="relative isolate flex min-h-[640px] items-center justify-center overflow-hidden" style=${{ height: '100svh',
-      background: 'radial-gradient(60% 55% at 50% 48%, #2d2f35 0%, #23252a 45%, #1d1e22 80%)' }}>
-    <div ref=${cloud} className="absolute inset-0 -z-10" style=${{ willChange: 'transform' }}>
+  const fade = 'linear-gradient(#000 0%, #000 72%, transparent 100%)';
+  return html`<section id="top" ref=${host} className="relative isolate flex min-h-[640px] items-center justify-center overflow-hidden" style=${{ height: '100svh' }}>
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-20" style=${{ background: 'var(--hero-bg)', WebkitMaskImage: fade, maskImage: fade }}></div>
+    <div ref=${cloud} className="absolute inset-0 -z-10" style=${{ willChange: 'transform', WebkitMaskImage: fade, maskImage: fade }}>
       <canvas ref=${canvas} aria-hidden="true" className="h-full w-full"></canvas>
     </div>
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-40" style=${{ background: 'linear-gradient(transparent, var(--bg))' }}></div>
 
     <div ref=${inner} key=${lang} className="gutter relative flex w-full max-w-5xl flex-col items-center text-center" style=${{ willChange: 'transform, opacity' }}>
       <p className="eyebrow fade" style=${{ animationDelay: '.9s' }}>${t.intro}</p>
@@ -599,7 +670,7 @@ function Cover({ t, lang }) {
         ${BRAND.split('').map((ch, i) => html`<span key=${i} aria-hidden="true" style=${{ animationDelay: `${1.0 + i * 0.06}s` }}>${ch}</span>`)}
       </h1>
       <p className="fade display mt-6 text-[clamp(20px,2.6vw,30px)] font-medium leading-snug tracking-[-0.02em]" style=${{ animationDelay: '1.6s' }}>
-        ${t.sub[0]} <span className="text-[color:var(--muted)]">${t.sub[1]}</span>
+        ${t.sub[0]} <span className="hl-plain text-[color:var(--muted)]">${t.sub[1]}</span>
       </p>
       <div className="fade mt-10 flex flex-wrap justify-center gap-3" style=${{ animationDelay: '1.85s' }}>
         <a href="#contact" className="btn inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] px-6 py-3.5 text-sm font-semibold text-[#1d1e22]">${t.cta} ${Icon.arrow}</a>
@@ -607,7 +678,7 @@ function Cover({ t, lang }) {
       </div>
     </div>
 
-    <div className="gutter absolute inset-x-0 bottom-0 mx-auto flex max-w-6xl items-end justify-between gap-6 pb-8">
+    <div className="gutter absolute inset-x-0 bottom-0 mx-auto flex wrap items-end justify-between gap-6 pb-8">
       <span className="eyebrow fade hidden items-center gap-3 sm:flex" style=${{ animationDelay: '2.2s' }}><span className="cue relative block h-8 w-px overflow-hidden bg-white/15"></span>${t.scroll}</span>
       <dl className="fade flex gap-6 sm:gap-10" style=${{ animationDelay: '2.1s' }}>
         ${t.stats.map(([v, k]) => html`<div key=${k} className="text-left"><dt className="display text-lg font-semibold sm:text-xl">${v}</dt><dd className="text-[11px] text-[color:var(--muted)]">${k}</dd></div>`)}
@@ -623,20 +694,20 @@ function Words({ parts }) {
 }
 
 function Heading({ lines, lead, center }) {
-  return html`<div className=${center ? 'mx-auto max-w-3xl text-center' : 'flex flex-wrap items-end justify-between gap-6'}>
-    <h2 className="reveal words display max-w-3xl text-[clamp(36px,5.4vw,68px)] font-semibold leading-[1.02]">
-      <${Words} parts=${[[lines[0], ''], [lines[1], 'text-[color:var(--muted)]']]}/>
+  return html`<div className=${center ? 'mx-auto max-w-6xl text-center' : 'flex flex-wrap items-end justify-between gap-6'}>
+    <h2 className="reveal words display max-w-6xl text-[clamp(36px,5vw,88px)] font-semibold leading-[1.02]">
+      <${Words} parts=${[[lines[0], ''], [lines[1], 'hl text-[color:var(--muted)]']]}/>
     </h2>
-    ${lead && html`<p className=${`reveal max-w-sm text-[15px] leading-relaxed text-[color:var(--muted)] ${center ? 'mx-auto mt-5' : ''}`} style=${{ '--d': '.25s' }}>${lead}</p>`}
+    ${lead && html`<p className=${`reveal max-w-md text-[15px] leading-relaxed xl:text-[17px] text-[color:var(--muted)] ${center ? 'mx-auto mt-5' : ''}`} style=${{ '--d': '.25s' }}>${lead}</p>`}
   </div>`;
 }
 
 function Services({ t }) {
-  return html`<section id="services" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+  return html`<section id="services" className="gutter mx-auto wrap scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.servicesTitle}/>
     <div className="mt-14 grid gap-4 md:grid-cols-2">
       ${t.services.map((s, i) => html`<article key=${i} className="reveal card lift flex flex-col p-2 pb-7 sm:pb-9" style=${{ '--d': `${(i % 2) * 0.08}s` }}>
-        <div className="art-frame relative h-44 overflow-hidden rounded-[22px] sm:h-52"><${Art} kind=${SERVICE_ART[i]}/></div>
+        <div className="art-frame relative h-44 overflow-hidden rounded-[22px] sm:h-52 xl:h-64"><${Art} kind=${SERVICE_ART[i]}/></div>
         <div className="flex flex-1 flex-col px-5 pt-6 sm:px-7">
         <div className="flex items-start justify-between gap-4">
           <span className="font-mono text-xs text-[color:var(--dim)]">0${i + 1}</span>
@@ -664,11 +735,11 @@ function Proof({ t }) {
     [String(KWORK_COUNT), t.proof[2], LINKS.kwork, true],
     [`${t.from} ${money(t, 600)}`, t.proof[3], '#calc', false],
   ];
-  return html`<section className="gutter relative z-10 mx-auto -mt-2 max-w-6xl" aria-label="FunPay · Kwork">
+  return html`<section className="gutter relative z-10 mx-auto -mt-2 wrap" aria-label="FunPay · Kwork">
     <div className="proof reveal card grid grid-cols-2 overflow-hidden lg:grid-cols-4">
       ${items.map(([v, label, href, ext], i) => html`<a key=${i} href=${href} target=${ext ? '_blank' : undefined} rel=${ext ? 'noopener' : undefined}
         className=${`group flex items-end justify-between gap-3 px-6 py-6 sm:px-7 ${i % 2 ? '' : 'border-r'} ${i < 2 ? 'border-b lg:border-b-0' : ''} ${i === 1 ? 'lg:border-r' : ''} border-[color:var(--line)]`}>
-        <span><span className="display block text-[clamp(26px,3vw,36px)] font-semibold leading-none tnum">${v}</span>
+        <span><span className="pv display block text-[clamp(26px,3vw,36px)] font-semibold leading-none tnum">${v}</span>
           <span className="mt-2 block text-[13px] text-[color:var(--muted)]">${label}</span></span>
         <span className="text-[color:var(--dim)] transition-colors group-hover:text-[color:var(--ink)]">${ext ? Icon.ext : Icon.arrow}</span>
       </a>`)}
@@ -678,7 +749,7 @@ function Proof({ t }) {
 
 function Process({ t }) {
   const delays = ['.2s', '2.3s', '4.4s'];
-  return html`<section id="process" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+  return html`<section id="process" className="gutter mx-auto wrap scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.processTitle} lead=${t.processLead} center/>
     <div className="relative mt-16">
       <div className="reveal track absolute left-[16.66%] right-[16.66%] top-[19px] hidden md:block"></div>
@@ -694,9 +765,9 @@ function Process({ t }) {
 }
 
 function Reviews({ t }) {
-  return html`<section id="reviews" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+  return html`<section id="reviews" className="gutter mx-auto wrap scroll-mt-24 py-24 sm:py-32">
     <div className="flex flex-wrap items-end justify-between gap-6">
-      <h2 className="reveal words display max-w-3xl text-[clamp(36px,5.4vw,68px)] font-semibold leading-[1.02]"><${Words} parts=${[[t.reviewsTitle[0], ''], [t.reviewsTitle[1], 'text-[color:var(--muted)]']]}/></h2>
+      <h2 className="reveal words display max-w-6xl text-[clamp(36px,5vw,88px)] font-semibold leading-[1.02]"><${Words} parts=${[[t.reviewsTitle[0], ''], [t.reviewsTitle[1], 'hl text-[color:var(--muted)]']]}/></h2>
       <a href=${LINKS.funpay} target="_blank" rel="noopener" style=${{ '--d': '.3s' }} className="reveal btn inline-flex items-center gap-2 rounded-full border border-[color:var(--line-2)] bg-white/[0.04] px-5 py-3 text-sm font-semibold hover:border-white/30">
         ${Star} ${FUNPAY_STATS.rating} · ${t.allReviews} ${Icon.ext}</a>
     </div>
@@ -716,7 +787,7 @@ function Reviews({ t }) {
 }
 
 function Works({ t }) {
-  return html`<section id="works" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+  return html`<section id="works" className="gutter mx-auto wrap scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.worksTitle} center/>
     <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       ${t.works.map(([name, what, metric], i) => html`<article key=${i} className="reveal card lift overflow-hidden" style=${{ '--d': `${(i % 3) * 0.08}s` }}>
@@ -776,7 +847,7 @@ function Calculator({ t, onToast }) {
     catch { const el = fallbackRef.current; if (el) { el.hidden = false; el.select(); } onToast(t.copyFail); }
   };
 
-  return html`<section id="calc" className="gutter mx-auto max-w-6xl scroll-mt-24 py-24 sm:py-32">
+  return html`<section id="calc" className="gutter mx-auto wrap scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.calcTitle} lead=${t.calcLead}/>
     <div className="reveal card mt-14 grid overflow-hidden lg:grid-cols-[1.3fr_1fr]">
       <div className="p-6 sm:p-10">
@@ -824,7 +895,7 @@ function Calculator({ t, onToast }) {
 
 function Faq({ t }) {
   const [open, setOpen] = useState(0);
-  return html`<section id="faq" className="gutter mx-auto max-w-3xl scroll-mt-24 py-24 sm:py-32">
+  return html`<section id="faq" className="gutter mx-auto max-w-4xl scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.faqTitle} center/>
     <div className="mt-12 space-y-3">
       ${t.faq.map(([q, a], i) => html`<div key=${i} className="reveal card overflow-hidden" style=${{ '--d': `${i * 0.05}s` }}>
@@ -840,10 +911,10 @@ function Faq({ t }) {
 
 function Contact({ t }) {
   const items = [[LINKS.telegram, 'Telegram'], [LINKS.kwork, 'Kwork'], [LINKS.funpay, 'FunPay']];
-  return html`<footer id="contact" className="gutter mx-auto max-w-6xl scroll-mt-24 pb-12 pt-24 sm:pt-32">
+  return html`<footer id="contact" className="gutter mx-auto wrap scroll-mt-24 pb-12 pt-24 sm:pt-32">
     <div className="reveal card relative overflow-hidden px-6 py-14 text-center sm:px-12 sm:py-20"
-      style=${{ background: 'radial-gradient(70% 90% at 50% 0%, rgba(116,227,214,.16), transparent 60%), radial-gradient(60% 80% at 50% 100%, rgba(156,195,255,.14), transparent 60%), var(--card)' }}>
-      <h2 className="reveal words display mx-auto max-w-3xl text-[clamp(36px,6vw,76px)] font-semibold leading-[1.02]" style=${{ '--d': '.2s' }}><${Words} parts=${[[t.contactTitle[0], ''], [t.contactTitle[1], 'text-[color:var(--muted)]']]}/></h2>
+      style=${{ background: 'var(--contact-bg)' }}>
+      <h2 className="reveal words display mx-auto max-w-5xl text-[clamp(36px,6vw,104px)] font-semibold leading-[1.02]" style=${{ '--d': '.2s' }}><${Words} parts=${[[t.contactTitle[0], ''], [t.contactTitle[1], 'hl text-[color:var(--muted)]']]}/></h2>
       <p className="mx-auto mt-6 max-w-[48ch] text-[15px] leading-relaxed text-[color:var(--muted)]">${t.contactText}</p>
       <a href=${LINKS.telegram} target="_blank" rel="noopener" className="btn mt-9 inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] px-7 py-4 text-sm font-semibold text-[#1d1e22]">${LINKS.telegramLabel} ${Icon.arrow}</a>
     </div>
@@ -866,6 +937,8 @@ function App() {
     return LANGS.includes(nav) ? nav : 'ru';
   });
   const setLang = l => { setLangState(l); try { localStorage.setItem('de-lang', l); } catch {} };
+  const [theme, setThemeState] = useState(INITIAL_THEME);
+  const setTheme = m => { setThemeState(m); applyTheme(m); try { localStorage.setItem('de-theme', m); } catch {} };
   const t = T[lang];
   const [toast, setToast] = useState('');
   useEffect(() => { document.documentElement.lang = lang; }, [lang]);
@@ -885,7 +958,7 @@ function App() {
   useEffect(() => { if (!toast) return; const id = setTimeout(() => setToast(''), 3200); return () => clearTimeout(id); }, [toast]);
 
   return html`<div>
-    <${Header} t=${t} lang=${lang} setLang=${setLang}/>
+    <${Header} t=${t} lang=${lang} setLang=${setLang} theme=${theme} setTheme=${setTheme}/>
     <main>
       <${Cover} t=${t} lang=${lang}/>
       <${Proof} t=${t}/>
