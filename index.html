@@ -531,7 +531,6 @@ const SERVICES = [
   { cat: 3, wide: true, art: 'browser', prices: [2500, 4000, 500], plus: [0, 0, 1] },
   { cat: 4, demo: { code: 'jbeam' }, prices: [800, 1000, 3000] },
   { cat: 4, demo: { code: 'lua' }, prices: [1000, 1200, 3000] },
-  { cat: 5, demo: { code: 'ai' }, prices: [2500, 1000, 3000] },
 ];
 
 /* демо-код в карточках: короткие куски в том виде, в каком я их пишу */
@@ -644,26 +643,6 @@ function tick(dt)
         ApplyBodyImpulse(gun.held, target, VecScale(dir, gun.force * dt))
     end
 end` },
-  ai: { file: 'assistant.py', lang: 'py', src: `import anthropic
-from aiogram import Router, F
-from aiogram.types import Message
-
-client = anthropic.AsyncAnthropic()
-router = Router()
-SYSTEM = open("prompt.md", encoding="utf-8").read()   # tone, prices, FAQ
-
-@router.message(F.text)
-async def answer(msg: Message):
-    history = await memory.last(msg.chat.id, limit=12)
-    reply = await client.messages.create(
-        model="claude-sonnet-5-5",
-        max_tokens=800,
-        system=SYSTEM,
-        messages=history + [{"role": "user", "content": msg.text}],
-    )
-    text = reply.content[0].text
-    await memory.save(msg.chat.id, msg.text, text)
-    await msg.answer(text)` },
 };
 
 /* простая подсветка: комментарии, строки, ключевые слова, числа, декораторы, вызовы */
@@ -713,8 +692,9 @@ const T = {
     cta: 'Обсудить проект', cta2: 'Смотреть работы', scroll: 'Листайте вниз',
     stats: [['24/7', 'боты на хостинге'], ['7 дней', 'бесплатных правок'], ['100%', 'исходный код']],
     from: 'от',
-    servicesTitle: ['Услуги.', 'Десять услуг, одна планка качества.'],
+    servicesTitle: ['Услуги.', 'Девять услуг, одна планка качества.'],
     demo: 'демо', openDemo: 'Открыть демо', close: 'Закрыть', cats: ['Discord', 'Telegram', 'Парсеры', 'Сайты', 'Моддинг', 'ИИ'],
+    groups: ['Discord', 'Telegram и парсеры', 'Сайты', 'Моддинг'], groupUnit: n => n === 1 ? 'услуга' : n < 5 ? 'услуги' : 'услуг',
     more: { title: 'Нет в списке?', text: 'Опишите задачу. Если возьмусь — назову цену и срок, если нет — скажу сразу.', cta: 'Написать в Telegram' },
     services: [
       { title: 'Discord-сервер под ключ', text: 'Каналы и категории, роли и права, оформление, приветствие, тикеты и авто-роли. Для кланов, стримеров и сообществ.', items: ['Настройка ролей и прав', 'Сервер под ключ', 'Оформление и приветствие'] },
@@ -726,7 +706,6 @@ const T = {
       { title: 'Сайты и лендинги', text: 'Лендинги и сайты-портфолио с живыми анимациями, адаптивом под телефон и несколькими языками. Выкладываю на хостинг и подключаю домен. Пример — этот сайт.', items: ['Лендинг на одну страницу', 'Сайт-портфолио с анимациями', 'Хостинг и домен'] },
       { title: 'BeamNG.drive: физика и моторы', text: 'Калибрую JBeam: моторы, коробки, турбины, подвеску и вес, чтобы машина ехала и билась как задумано. Механики на Lua: лаунч-контроль, свои приборы, электрика.', items: ['Калибровка мотора или подвески', 'Механика на Lua', 'Мод с нуля'] },
       { title: 'Teardown: моды на Lua', text: 'Свои инструменты, оружие и механики на Lua: разрушения, физика объектов, интерфейс и настройки мода.', items: ['Инструмент или оружие', 'Механика или интерфейс', 'Мод с нуля'] },
-      { title: 'ИИ-боты и инструменты', text: 'Telegram-бот на Claude или GPT, который отвечает вашим клиентам. Настройка Claude Code и Cursor, свои MCP-серверы.', items: ['Бот на Claude или GPT', 'Настройка Claude Code или Cursor', 'Свой MCP-сервер'] },
     ],
     worksTitle: ['Работы.', 'Проекты, которые уже работают.'],
     works: [
@@ -772,8 +751,9 @@ const T = {
     cta: 'Discuss a project', cta2: 'View work', scroll: 'Scroll down',
     stats: [['24/7', 'hosted bots'], ['7 days', 'of free fixes'], ['100%', 'source code']],
     from: 'from',
-    servicesTitle: ['Services.', 'Ten services, one standard of quality.'],
+    servicesTitle: ['Services.', 'Nine services, one standard of quality.'],
     demo: 'demo', openDemo: 'Open demo', close: 'Close', cats: ['Discord', 'Telegram', 'Scrapers', 'Websites', 'Modding', 'AI'],
+    groups: ['Discord', 'Telegram & scrapers', 'Websites', 'Modding'], groupUnit: n => n === 1 ? 'service' : 'services',
     more: { title: 'Not on the list?', text: 'Describe the task. If I take it, you get a price and a deadline; if not, I will tell you right away.', cta: 'Message on Telegram' },
     services: [
       { title: 'Discord server, turnkey', text: 'Channels and categories, roles and permissions, branding, welcome flow, tickets and auto-roles. For clans, streamers and communities.', items: ['Roles and permissions setup', 'Turnkey server', 'Branding and welcome'] },
@@ -785,7 +765,6 @@ const T = {
       { title: 'Websites and landing pages', text: 'Landing pages and portfolio sites with smooth animations, mobile-friendly layout and several languages. I deploy them to hosting and connect a domain. Example: this site.', items: ['One-page landing', 'Animated portfolio site', 'Hosting and domain'] },
       { title: 'BeamNG.drive: physics & engines', text: 'I calibrate JBeam: engines, gearboxes, turbos, suspension and weight, so the car drives and crashes as intended. Lua mechanics: launch control, custom gauges, electrics.', items: ['Engine or suspension tuning', 'Lua mechanic', 'Mod from scratch'] },
       { title: 'Teardown: Lua mods', text: 'Custom tools, weapons and mechanics in Lua: destruction, object physics, UI and mod settings.', items: ['Tool or weapon', 'Mechanic or UI', 'Mod from scratch'] },
-      { title: 'AI bots & tooling', text: 'A Telegram bot on Claude or GPT that answers your customers. Claude Code and Cursor setup, custom MCP servers.', items: ['Bot on Claude or GPT', 'Claude Code or Cursor setup', 'Custom MCP server'] },
     ],
     worksTitle: ['Work.', 'Projects that already run.'],
     works: [
@@ -831,8 +810,9 @@ const T = {
     cta: 'Hablemos', cta2: 'Ver trabajos', scroll: 'Desliza hacia abajo',
     stats: [['24/7', 'bots en hosting'], ['7 días', 'de ajustes gratis'], ['100%', 'código fuente']],
     from: 'desde',
-    servicesTitle: ['Servicios.', 'Diez servicios, un mismo nivel de calidad.'],
+    servicesTitle: ['Servicios.', 'Nueve servicios, un mismo nivel de calidad.'],
     demo: 'demo', openDemo: 'Abrir demo', close: 'Cerrar', cats: ['Discord', 'Telegram', 'Scrapers', 'Sitios', 'Modding', 'IA'],
+    groups: ['Discord', 'Telegram y scrapers', 'Sitios web', 'Modding'], groupUnit: n => n === 1 ? 'servicio' : 'servicios',
     more: { title: '¿No está en la lista?', text: 'Describe la tarea. Si la acepto, te doy precio y plazo; si no, te lo digo enseguida.', cta: 'Escribir por Telegram' },
     services: [
       { title: 'Servidor Discord llave en mano', text: 'Canales y categorías, roles y permisos, diseño, bienvenida, tickets y auto-roles. Para clanes, streamers y comunidades.', items: ['Roles y permisos', 'Servidor llave en mano', 'Diseño y bienvenida'] },
@@ -844,7 +824,6 @@ const T = {
       { title: 'Sitios web y landings', text: 'Landings y sitios de portafolio con animaciones fluidas, diseño adaptado al móvil y varios idiomas. Los publico en un hosting y conecto el dominio. Ejemplo: este sitio.', items: ['Landing de una página', 'Portafolio con animaciones', 'Hosting y dominio'] },
       { title: 'BeamNG.drive: física y motores', text: 'Calibro JBeam: motores, cajas, turbos, suspensión y peso, para que el coche conduzca y choque como debe. Mecánicas en Lua: launch control, indicadores, electrónica.', items: ['Ajuste de motor o suspensión', 'Mecánica en Lua', 'Mod desde cero'] },
       { title: 'Teardown: mods en Lua', text: 'Herramientas, armas y mecánicas propias en Lua: destrucción, física de objetos, interfaz y ajustes del mod.', items: ['Herramienta o arma', 'Mecánica o interfaz', 'Mod desde cero'] },
-      { title: 'Bots de IA y herramientas', text: 'Un bot de Telegram con Claude o GPT que responde a tus clientes. Configuración de Claude Code y Cursor, servidores MCP propios.', items: ['Bot con Claude o GPT', 'Configurar Claude Code o Cursor', 'Servidor MCP propio'] },
     ],
     worksTitle: ['Trabajos.', 'Proyectos que ya funcionan.'],
     works: [
@@ -986,6 +965,8 @@ function Heading({ lines, lead, center }) {
   </div>`;
 }
 
+/* как услуги разбиты на группы с подзаголовками (индексы в SERVICES) */
+const SERVICE_GROUPS = [[0, 1, 2], [3, 4, 5], [6], [7, 8]];
 const DEMOS = SERVICES.map((s, i) => s.demo ? i : -1).filter(i => i >= 0);   // порядок листания в окне демо
 
 function Demo({ s, big }) {
@@ -1027,8 +1008,15 @@ function Services({ t }) {
   const [at, setAt] = useState(-1);
   return html`<section id="services" className="gutter mx-auto wrap scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.servicesTitle}/>
-    <div className="mt-14 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-      ${t.services.map((s, i) => { const S = SERVICES[i], wide = S.wide; return html`<article key=${i} className=${`reveal card lift flex flex-col p-2 pb-7 sm:pb-9 ${wide ? 'md:col-span-2 lg:col-span-3 lg:flex-row lg:pb-2' : ''}`} style=${{ '--d': `${(wide ? 0 : i % 3) * 0.08}s` }}>
+    ${SERVICE_GROUPS.map((ids, g) => html`<div key=${g} className=${g ? 'mt-16 sm:mt-20' : 'mt-14'}>
+      <div className="reveal mb-5 flex items-center gap-4">
+        <span className="font-mono text-[11px] text-[color:var(--dim)]">${String(g + 1).padStart(2, '0')}</span>
+        <h3 className="display text-[clamp(20px,1.6vw,24px)] font-semibold">${t.groups[g]}</h3>
+        <span className="h-px flex-1 bg-[color:var(--line)]"></span>
+        <span className="font-mono text-[11px] uppercase tracking-wider text-[color:var(--dim)]">${ids.length} ${t.groupUnit(ids.length)}</span>
+      </div>
+      <div className=${`grid gap-4 md:grid-cols-2 ${ids.length === 2 ? '' : 'lg:grid-cols-3'}`}>
+      ${ids.map((i, k) => { const s = t.services[i], S = SERVICES[i], wide = S.wide; return html`<article key=${i} className=${`reveal card lift flex flex-col p-2 pb-7 sm:pb-9 ${wide ? 'md:col-span-2 lg:col-span-3 lg:flex-row lg:pb-2' : ''} ${!wide && ids.length === 3 && k === 2 ? 'md:col-span-2 lg:col-span-1' : ''}`} style=${{ '--d': `${k * 0.08}s` }}>
         ${wide
           ? html`<div className="art-frame relative h-44 overflow-hidden rounded-[22px] sm:h-52 xl:h-64 lg:!h-auto lg:min-h-[340px] lg:w-1/2 lg:shrink-0"><${Art} kind=${S.art}/></div>`
           : html`<button type="button" onClick=${() => setAt(i)} aria-label=${`${t.openDemo}: ${s.title}`} className="demo-frame art-frame relative h-52 overflow-hidden rounded-[22px] text-left xl:h-60">
@@ -1045,15 +1033,18 @@ function Services({ t }) {
           <span className="rounded-full border border-[color:var(--line)] px-3 py-1 font-mono text-[11px] text-[color:var(--accent)]">${t.from} ${money(t, S.prices[0])}</span>
         </div>
         <h3 className=${`display mt-5 font-semibold leading-tight ${wide ? 'text-[clamp(24px,2.6vw,32px)]' : 'text-[clamp(22px,1.9vw,28px)]'}`}>${s.title}</h3>
-        <p className="mt-3 text-[15px] leading-relaxed text-[color:var(--muted)]">${s.text}</p>
-        <ul className="mt-8 divide-y divide-[color:var(--line)] border-t border-[color:var(--line)]">
+        <p className="mb-8 mt-3 text-[15px] leading-relaxed text-[color:var(--muted)]">${s.text}</p>
+        <ul className="mt-auto divide-y divide-[color:var(--line)] border-t border-[color:var(--line)]">
           ${s.items.map((name, j) => html`<li key=${j} className="flex items-center justify-between gap-4 py-3 text-sm">
             <span className="text-[color:var(--ink)]/85">${name}</span>
             <span className="whitespace-nowrap font-mono text-[13px] tnum text-[color:var(--ink)]">${S.plus && S.plus[j] ? money(t, S.prices[j], true) : `${t.from} ${money(t, S.prices[j])}`}</span></li>`)}
         </ul>
         </div>
       </article>`; })}
-      <a href=${LINKS.telegram} target="_blank" rel="noopener" className="reveal more-card group flex flex-col justify-center gap-3 rounded-[28px] p-7 sm:p-9 lg:col-span-3 lg:flex-row lg:items-center lg:justify-between">
+      </div>
+    </div>`)}
+    <div className="mt-10">
+      <a href=${LINKS.telegram} target="_blank" rel="noopener" className="reveal more-card group flex flex-col justify-center gap-3 rounded-[28px] p-7 sm:p-9 lg:flex-row lg:items-center lg:justify-between">
         <span><span className="display block text-[clamp(22px,1.9vw,28px)] font-semibold">${t.more.title}</span>
           <span className="mt-2 block max-w-xl text-[15px] leading-relaxed text-[color:var(--muted)]">${t.more.text}</span></span>
         <span className="inline-flex items-center gap-2 text-sm font-semibold transition-colors group-hover:text-[color:var(--accent)]">${t.more.cta} ${Icon.arrow}</span>
@@ -1065,10 +1056,13 @@ function Services({ t }) {
 
 const Star = html`<svg width="13" height="13" viewBox="0 0 24 24" fill="#f5c76b" aria-hidden="true"><path d="M12 2.8l2.8 5.9 6.4.8-4.7 4.4 1.2 6.4L12 17.2l-5.7 3.1 1.2-6.4-4.7-4.4 6.4-.8z"/></svg>`;
 
+/* знак FunPay (две стрелки из их логотипа) — рядом с числом отзывов */
+const FunPayMark = html`<svg width="14" height="28" viewBox="9724 0 5367 11317" aria-label="FunPay" role="img"><path fill="#4384d0" d="M9724 2978L12407 0l2684 2978h-1263v3507l-2917-3507H9724zm5367 5362l-2684 2977-2683-2977h1273V4822l2906 3518h1188z"/></svg>`;
+
 function Proof({ t }) {
   const items = [
     [html`<span className="inline-flex items-center gap-2">${Star}${FUNPAY_STATS.rating}</span>`, t.proof[0], LINKS.funpay, true],
-    [String(FUNPAY_STATS.reviews), t.proof[1], LINKS.funpay, true],
+    [html`<span className="inline-flex items-center gap-2">${FunPayMark}${FUNPAY_STATS.reviews}</span>`, t.proof[1], LINKS.funpay, true],
     [String(KWORK_COUNT), t.proof[2], LINKS.kwork, true],
     [`${t.from} ${money(t, 600)}`, t.proof[3], '#calc', false],
   ];
