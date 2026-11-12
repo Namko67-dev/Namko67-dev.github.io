@@ -672,8 +672,22 @@ function CodeDemo({ id, big }) {
   </div>`;
 }
 const WORK_STACK = ['aiogram 3 · SQLite · Pillow', 'discord.py 2 · SQLite', 'requests · bs4 · openpyxl', 'Python · SQLite · Bot API', 'discord.py · Discord API', 'pandas · pdfplumber'];
-const TYPE_BASE = [1500, 1200, 600, 2500];
-const OPTION_ADD = [700, 1000, 400, null];   // null — множитель ×1.5
+/* калькулятор: те же 9 услуг, у каждой свои опции; «Срочно» (×1.5) есть у всех.
+   Названия типов — t.calcTypes, названия опций — t.opt[ключ] */
+const CALC = [
+  { base: 600, opts: ['full', 'design', 'logs'] },       // Discord-сервер
+  { base: 1200, opts: ['tickets', 'db', 'host'] },       // Discord-бот
+  { base: 400, opts: ['logs', 'audit'] },                // защита сервера
+  { base: 1500, opts: ['db', 'admin', 'host'] },         // Telegram-бот
+  { base: 3500, opts: ['pay', 'autopost', 'host'] },     // магазин в Telegram
+  { base: 1200, opts: ['alerts', 'sched', 'sheets'] },   // парсер
+  { base: 2500, opts: ['anim', 'lang', 'domain'] },      // сайт или лендинг
+  { base: 800, opts: ['lua', 'fullmod'] },               // мод BeamNG Drive
+  { base: 1000, opts: ['ui', 'fullmod'] },               // мод Teardown
+];
+const OPT_PRICE = { full: 400, design: 300, logs: 300, tickets: 800, db: 700, host: 400, audit: 300, admin: 1000,
+  pay: 800, autopost: 1200, alerts: 800, sched: 500, sheets: 300, anim: 1500, lang: 800, domain: 500, lua: 1000, ui: 700, fullmod: 2200 };
+const URGENT = 1.5;
 const ART = [
   'radial-gradient(70% 90% at 25% 15%, rgba(116,227,214,.55), transparent 60%), radial-gradient(60% 80% at 85% 90%, rgba(156,195,255,.45), transparent 60%), #2a2c31',
   'radial-gradient(70% 90% at 80% 20%, rgba(160,140,255,.5), transparent 60%), radial-gradient(60% 80% at 15% 95%, rgba(116,227,214,.3), transparent 60%), #2a2a31',
@@ -719,7 +733,12 @@ const T = {
     calcTitle: ['Стоимость.', 'Посчитайте за минуту.'],
     calcLead: 'Выберите тип и опции, цена пересчитается сразу. Это ориентир, точную сумму назову после обсуждения.',
     typeLabel: 'Тип заказа', optLabel: 'Опции', noteLabel: 'Коротко о задаче', notePh: 'Например: бот для записи клиентов в барбершоп, 3 мастера',
-    types: ['Telegram-бот', 'Парсер', 'Discord-сервер', 'Сайт или лендинг'], options: ['База данных', 'Админ-панель', 'Хостинг 24/7', 'Срочно, за 24 часа'],
+    calcTypes: ['Discord-сервер', 'Discord-бот', 'Защита сервера', 'Telegram-бот', 'Магазин в Telegram', 'Парсер', 'Сайт или лендинг', 'Мод BeamNG Drive', 'Мод Teardown'],
+    opt: { full: 'Сервер под ключ', design: 'Оформление и приветствие', logs: 'Анти-рейд и логи', tickets: 'Тикеты и уровни', db: 'База данных', host: 'Хостинг 24/7',
+      audit: 'Проверка прав ролей', admin: 'Админ-панель', pay: 'Приём оплаты', autopost: 'Автопостинг в канал', alerts: 'Уведомления в Telegram', sched: 'Запуск по расписанию',
+      sheets: 'Выгрузка в Google Таблицы', anim: 'Анимации и 3D', lang: 'Второй язык', domain: 'Хостинг и домен', lua: 'Механика на Lua', ui: 'Интерфейс и настройки',
+      fullmod: 'Мод с нуля', urgent: 'Срочно, за 24 часа' },
+    optHint: 'Сначала выберите тип заказа, и здесь появятся опции для него.',
     estimate: 'Ориентировочно', noType: 'Тип не выбран', pickType: 'Выберите тип заказа, чтобы увидеть цену и скопировать ТЗ.',
     copy: 'Скопировать ТЗ', copied: 'ТЗ скопировано. Отправьте его мне в Telegram', copyFail: 'Не удалось скопировать: текст выделен, нажмите Ctrl+C',
     brief: { title: 'ТЗ для DanivaL', type: 'Тип заказа', opts: 'Опции', none: 'без доп. опций', urgent: 'Срочность', yes: 'да, за 24 часа', no: 'обычный срок', price: 'Ориентировочная стоимость', desc: 'Описание задачи', descPh: '(опишите, что должно получиться)' },
@@ -778,7 +797,12 @@ const T = {
     calcTitle: ['Pricing.', 'Estimate it in a minute.'],
     calcLead: 'Pick a type and options, the price updates instantly. It is an estimate; I confirm the exact amount after we talk.',
     typeLabel: 'Project type', optLabel: 'Options', noteLabel: 'About the task', notePh: 'For example: a booking bot for a barbershop with 3 barbers',
-    types: ['Telegram bot', 'Scraper', 'Discord server', 'Website or landing'], options: ['Database', 'Admin panel', '24/7 hosting', 'Urgent, within 24 hours'],
+    calcTypes: ['Discord server', 'Discord bot', 'Server protection', 'Telegram bot', 'Telegram shop', 'Scraper', 'Website or landing', 'BeamNG Drive mod', 'Teardown mod'],
+    opt: { full: 'Turnkey server', design: 'Branding and welcome', logs: 'Anti-raid and logs', tickets: 'Tickets and levels', db: 'Database', host: '24/7 hosting',
+      audit: 'Role permission audit', admin: 'Admin panel', pay: 'Payments', autopost: 'Channel autoposting', alerts: 'Telegram alerts', sched: 'Scheduled runs',
+      sheets: 'Export to Google Sheets', anim: 'Animations and 3D', lang: 'Second language', domain: 'Hosting and domain', lua: 'Lua mechanic', ui: 'UI and settings',
+      fullmod: 'Mod from scratch', urgent: 'Urgent, within 24 hours' },
+    optHint: 'Pick a project type first, and its options will appear here.',
     estimate: 'Estimate', noType: 'No type selected', pickType: 'Pick a project type to see the price and copy the brief.',
     copy: 'Copy the brief', copied: 'Brief copied. Send it to me on Telegram', copyFail: 'Could not copy: the text is selected, press Ctrl+C',
     brief: { title: 'Brief for DanivaL', type: 'Project type', opts: 'Options', none: 'no extra options', urgent: 'Urgency', yes: 'yes, within 24 hours', no: 'regular timeline', price: 'Estimated price', desc: 'Task description', descPh: '(describe the result you need)' },
@@ -837,7 +861,12 @@ const T = {
     calcTitle: ['Precios.', 'Calcúlalo en un minuto.'],
     calcLead: 'Elige el tipo y las opciones, el precio se actualiza al instante. Es una estimación; confirmo el importe exacto tras hablar.',
     typeLabel: 'Tipo de proyecto', optLabel: 'Opciones', noteLabel: 'Sobre la tarea', notePh: 'Por ejemplo: bot de reservas para una barbería con 3 barberos',
-    types: ['Bot de Telegram', 'Scraper', 'Servidor Discord', 'Sitio o landing'], options: ['Base de datos', 'Panel de admin', 'Hosting 24/7', 'Urgente, en 24 horas'],
+    calcTypes: ['Servidor Discord', 'Bot de Discord', 'Protección del servidor', 'Bot de Telegram', 'Tienda en Telegram', 'Scraper', 'Sitio o landing', 'Mod de BeamNG Drive', 'Mod de Teardown'],
+    opt: { full: 'Servidor llave en mano', design: 'Diseño y bienvenida', logs: 'Anti-raid y registros', tickets: 'Tickets y niveles', db: 'Base de datos', host: 'Hosting 24/7',
+      audit: 'Revisión de permisos', admin: 'Panel de admin', pay: 'Cobro de pagos', autopost: 'Autopublicación en canal', alerts: 'Avisos en Telegram', sched: 'Ejecución programada',
+      sheets: 'Exportar a Google Sheets', anim: 'Animaciones y 3D', lang: 'Segundo idioma', domain: 'Hosting y dominio', lua: 'Mecánica en Lua', ui: 'Interfaz y ajustes',
+      fullmod: 'Mod desde cero', urgent: 'Urgente, en 24 horas' },
+    optHint: 'Primero elige un tipo de proyecto y aquí aparecerán sus opciones.',
     estimate: 'Estimación', noType: 'Sin tipo elegido', pickType: 'Elige un tipo de proyecto para ver el precio y copiar el brief.',
     copy: 'Copiar el brief', copied: 'Brief copiado. Envíamelo por Telegram', copyFail: 'No se pudo copiar: el texto está seleccionado, pulsa Ctrl+C',
     brief: { title: 'Brief para DanivaL', type: 'Tipo de proyecto', opts: 'Opciones', none: 'sin opciones extra', urgent: 'Urgencia', yes: 'sí, en 24 horas', no: 'plazo normal', price: 'Precio estimado', desc: 'Descripción', descPh: '(describe el resultado que necesitas)' },
@@ -1152,24 +1181,28 @@ function useCountUp(target) {
 }
 
 function Calculator({ t, onToast }) {
-  const [type, setType] = useState(-1);
-  const [opts, setOpts] = useState([true, false, false, false]);
+  const [type, setTypeState] = useState(-1);
+  const [opts, setOpts] = useState({});          // { ключ опции: true }
   const [note, setNote] = useState('');
   const fallbackRef = useRef(null);
+  const setType = i => { setTypeState(i); setOpts(o => (o.urgent ? { urgent: true } : {})); };   // у нового типа свои опции
+  const keys = type < 0 ? [] : [...CALC[type].opts, 'urgent'];
+  const chosen = keys.filter(k => opts[k] && k !== 'urgent');
   const priceRub = useMemo(() => {
     if (type < 0) return 0;
-    let p = TYPE_BASE[type] + OPTION_ADD.reduce((s, add, i) => s + (opts[i] && add ? add : 0), 0);
-    if (opts[3]) p *= 1.5;
+    let p = CALC[type].base + chosen.reduce((s, k) => s + OPT_PRICE[k], 0);
+    if (opts.urgent) p *= URGENT;
     return Math.round(p / 50) * 50;
   }, [type, opts]);
+  const optPrice = k => k === 'urgent' ? `×${URGENT}` : money(t, OPT_PRICE[k], true);
   const shown = useCountUp(t.currency === 'RUB' ? priceRub : Math.round(priceRub / USD_RATE));
   const fmt = v => new Intl.NumberFormat(t.locale, { style: 'currency', currency: t.currency, maximumFractionDigits: 0 }).format(Math.round(v));
   const b = t.brief;
   const brief = type < 0 ? '' : [
     b.title,
-    `${b.type}: ${t.types[type]}`,
-    `${b.opts}: ${t.options.filter((_, i) => opts[i] && i !== 3).join(', ') || b.none}`,
-    `${b.urgent}: ${opts[3] ? b.yes : b.no}`,
+    `${b.type}: ${t.calcTypes[type]}`,
+    `${b.opts}: ${chosen.map(k => t.opt[k]).join(', ') || b.none}`,
+    `${b.urgent}: ${opts.urgent ? b.yes : b.no}`,
     `${b.price}: ${t.from} ${money(t, priceRub)}`,
     `${b.desc}: ${note.trim() || b.descPh}`,
   ].join('\n');
@@ -1183,22 +1216,24 @@ function Calculator({ t, onToast }) {
     <div className="reveal card mt-14 grid overflow-hidden lg:grid-cols-[1.3fr_1fr]">
       <div className="p-6 sm:p-10">
         <p className="eyebrow">${t.typeLabel}</p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-4" role="group" aria-label=${t.typeLabel}>
-          ${t.types.map((label, i) => html`<button key=${i} onClick=${() => setType(i)} aria-pressed=${type === i}
-            className=${`flex flex-col items-start gap-1 rounded-2xl border px-4 py-4 text-left transition-colors duration-300 ${type === i ? 'border-transparent bg-[color:var(--ink)] text-[#1d1e22]' : 'border-[color:var(--line)] bg-white/[0.02] hover:border-[color:var(--line-2)]'}`}>
-            <span className="text-sm font-semibold">${label}</span>
-            <span className=${`font-mono text-[11px] ${type === i ? 'text-[#1d1e22]/60' : 'text-[color:var(--muted)]'}`}>${t.from} ${money(t, TYPE_BASE[i])}</span></button>`)}
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3" role="group" aria-label=${t.typeLabel}>
+          ${t.calcTypes.map((label, i) => html`<button key=${i} onClick=${() => setType(i)} aria-pressed=${type === i}
+            className=${`flex flex-col items-start gap-1 rounded-2xl border px-4 py-3.5 text-left transition-colors duration-300 ${type === i ? 'border-transparent bg-[color:var(--ink)] text-[#1d1e22]' : 'border-[color:var(--line)] bg-white/[0.02] hover:border-[color:var(--line-2)]'}`}>
+            <span className="text-sm font-semibold leading-snug">${label}</span>
+            <span className=${`font-mono text-[11px] ${type === i ? 'text-[#1d1e22]/60' : 'text-[color:var(--muted)]'}`}>${t.from} ${money(t, CALC[i].base)}</span></button>`)}
         </div>
         <p className="eyebrow mt-9">${t.optLabel}</p>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
-          ${t.options.map((label, i) => html`<label key=${i} htmlFor=${`opt-${i}`}
-            className=${`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3.5 transition-colors duration-300 ${opts[i] ? 'border-[color:var(--line-2)] bg-white/[0.05]' : 'border-[color:var(--line)] hover:border-[color:var(--line-2)]'}`}>
-            <input id=${`opt-${i}`} type="checkbox" className="sr-only" checked=${opts[i]} onChange=${() => setOpts(s => s.map((v, k) => k === i ? !v : v))}/>
-            <span className=${`grid h-5 w-5 shrink-0 place-items-center rounded-md border transition-colors duration-300 ${opts[i] ? 'border-transparent bg-[color:var(--accent)] text-[#1d1e22]' : 'border-white/25'}`}>${opts[i] && Icon.check}</span>
-            <span className="flex-1 text-sm font-medium">${label}</span>
-            <span className="font-mono text-[11px] text-[color:var(--muted)]">${OPTION_ADD[i] ? money(t, OPTION_ADD[i], true) : '×1.5'}</span>
+        ${type < 0
+          ? html`<p className="mt-4 rounded-2xl border border-dashed border-[color:var(--line)] px-4 py-4 text-sm text-[color:var(--muted)]">${t.optHint}</p>`
+          : html`<div className="mt-4 grid gap-2 sm:grid-cols-2">
+          ${keys.map(k => html`<label key=${`${type}-${k}`} htmlFor=${`opt-${k}`}
+            className=${`flex cursor-pointer items-center gap-3 rounded-2xl border px-4 py-3.5 transition-colors duration-300 ${opts[k] ? 'border-[color:var(--line-2)] bg-white/[0.05]' : 'border-[color:var(--line)] hover:border-[color:var(--line-2)]'}`}>
+            <input id=${`opt-${k}`} type="checkbox" className="sr-only" checked=${!!opts[k]} onChange=${() => setOpts(s => ({ ...s, [k]: !s[k] }))}/>
+            <span className=${`grid h-5 w-5 shrink-0 place-items-center rounded-md border transition-colors duration-300 ${opts[k] ? 'border-transparent bg-[color:var(--accent)] text-[#1d1e22]' : 'border-white/25'}`}>${opts[k] && Icon.check}</span>
+            <span className="flex-1 text-sm font-medium">${t.opt[k]}</span>
+            <span className="whitespace-nowrap font-mono text-[11px] text-[color:var(--muted)]">${optPrice(k)}</span>
           </label>`)}
-        </div>
+        </div>`}
         <label htmlFor="note" className="eyebrow mt-9 block">${t.noteLabel}</label>
         <textarea id="note" rows="3" value=${note} onInput=${e => setNote(e.target.value)} placeholder=${t.notePh}
           className="mt-4 w-full resize-y rounded-2xl border border-[color:var(--line)] bg-black/15 px-4 py-3 text-sm text-[color:var(--ink)] placeholder:text-white/30 outline-none transition-colors focus:border-[color:var(--accent)]"></textarea>
@@ -1210,8 +1245,8 @@ function Calculator({ t, onToast }) {
             ${type >= 0 ? html`<span className="block text-[0.3em] font-medium tracking-normal text-[color:var(--muted)]">${t.from}</span>${fmt(shown)}` : html`<span className="text-white/15">—</span>`}
           </p>
           <ul className="mt-8 space-y-2 border-t border-[color:var(--line)] pt-6 text-sm text-[color:var(--muted)]">
-            <li className="flex justify-between gap-4"><span>${type >= 0 ? t.types[type] : t.noType}</span><span className="tnum">${type >= 0 ? money(t, TYPE_BASE[type]) : ''}</span></li>
-            ${type >= 0 && t.options.map((label, i) => opts[i] && html`<li key=${i} className="flex justify-between gap-4"><span>${label}</span><span className="tnum">${OPTION_ADD[i] ? money(t, OPTION_ADD[i], true) : '×1.5'}</span></li>`)}
+            <li className="flex justify-between gap-4"><span>${type >= 0 ? t.calcTypes[type] : t.noType}</span><span className="tnum">${type >= 0 ? money(t, CALC[type].base) : ''}</span></li>
+            ${keys.filter(k => opts[k]).map(k => html`<li key=${k} className="flex justify-between gap-4"><span>${t.opt[k]}</span><span className="tnum">${optPrice(k)}</span></li>`)}
           </ul>
         </div>
         ${type >= 0 ? html`<div className="mt-10">
