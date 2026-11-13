@@ -17,7 +17,7 @@
 <meta property="og:locale" content="ru_RU">
 <meta name="twitter:card" content="summary_large_image">
 <!-- защита: скрипты только с этого сайта, без форм наружу, плагинов и подмены базового адреса -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; media-src 'self'; object-src 'none'; frame-src 'self'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231d1e22'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='700' font-size='34' text-anchor='middle' fill='%23f3f3f1'%3ED%3C/text%3E%3C/svg%3E">
 <title>DanivaL Studio</title>
@@ -171,6 +171,9 @@
   .lb-nav.p { left: -58px; } .lb-nav.n { right: -58px; }
   .lb-close { position: absolute; top: 16px; right: 16px; transform: rotate(45deg); }
   @media (max-width: 1100px) { .lb-nav.p { left: 8px; } .lb-nav.n { right: 8px; } }
+  .promo-fig { width: min(1280px, 100%); }
+  .promo-frame { display: block; width: 100%; aspect-ratio: 16 / 9; max-height: calc(100vh - 120px); border: 0; border-radius: 14px; background: #0B0606; box-shadow: 0 60px 140px -40px #000; }
+  @media (max-aspect-ratio: 4/5) { .promo-frame { aspect-ratio: 9 / 16; width: auto; height: calc(100vh - 120px); max-width: 100%; margin: 0 auto; } }
 
   /* process: a soft light travels along the line, each step lights up as it passes */
   .track { position: relative; height: 1px; background: var(--line-2); overflow: hidden; }
@@ -740,6 +743,7 @@ const T = {
       { title: 'Teardown: моды на Lua', text: 'Свои инструменты, оружие и механики на Lua: разрушения, физика объектов, интерфейс и настройки мода.', items: ['Инструмент или оружие', 'Механика или интерфейс', 'Мод с нуля'] },
     ],
     worksTitle: ['Работы.', 'Проекты, которые уже работают.'],
+    promo: { tag: 'Промо-ролик · 28 с', title: 'Промо-ролик DanivaL', text: 'Motion-дизайн прямо в браузере: печатается запрос, вылетает 3D-карточка, камера наезжает на поле ввода, на фоне живые шёлковые волны. Сделано кодом, без видеоредактора.', play: 'Смотреть ролик', open: 'Открыть на весь экран', meta: 'HTML · CSS · WebGL-шейдер' },
     works: [
       ['Бот-магазин в Telegram', 'Каталог с фото, корзина, оформление заказа, статусы и админка с рассылкой.', '4 шага до заказа'],
       ['Discord-бот «всё в одном»', 'Тикеты, уровни, роли по кнопкам, приветствие с картинкой и сборка сервера за минуту.', '6 тем серверов'],
@@ -804,6 +808,7 @@ const T = {
       { title: 'Teardown: Lua mods', text: 'Custom tools, weapons and mechanics in Lua: destruction, object physics, UI and mod settings.', items: ['Tool or weapon', 'Mechanic or UI', 'Mod from scratch'] },
     ],
     worksTitle: ['Work.', 'Projects that already run.'],
+    promo: { tag: 'Promo reel · 28 s', title: 'DanivaL promo reel', text: 'Motion design right in the browser: a prompt types itself, a 3D card flies in, the camera pushes into the input, silk waves move behind. Built in code, no video editor.', play: 'Watch the reel', open: 'Open full screen', meta: 'HTML · CSS · WebGL shader' },
     works: [
       ['Telegram shop bot', 'Catalog with photos, cart, checkout, order statuses and an admin panel with broadcasts.', '4 steps to order'],
       ['All-in-one Discord bot', 'Tickets, levels, button roles, welcome cards and a full server setup in one minute.', '6 server themes'],
@@ -868,6 +873,7 @@ const T = {
       { title: 'Teardown: mods en Lua', text: 'Herramientas, armas y mecánicas propias en Lua: destrucción, física de objetos, interfaz y ajustes del mod.', items: ['Herramienta o arma', 'Mecánica o interfaz', 'Mod desde cero'] },
     ],
     worksTitle: ['Trabajos.', 'Proyectos que ya funcionan.'],
+    promo: { tag: 'Vídeo promo · 28 s', title: 'Vídeo promo de DanivaL', text: 'Motion design en el navegador: una petición se escribe sola, una tarjeta 3D entra volando, la cámara se acerca al campo de texto y detrás se mueven ondas de seda. Hecho con código, sin editor de vídeo.', play: 'Ver el vídeo', open: 'Abrir a pantalla completa', meta: 'HTML · CSS · shader WebGL' },
     works: [
       ['Bot tienda en Telegram', 'Catálogo con fotos, carrito, pedido, estados y panel de administración con envíos masivos.', '4 pasos al pedido'],
       ['Bot de Discord todo en uno', 'Tickets, niveles, roles con botones, bienvenida con imagen y servidor listo en un minuto.', '6 temas de servidor'],
@@ -1164,10 +1170,54 @@ function Reviews({ t }) {
   </section>`;
 }
 
+// окно с промо-роликом: сам ролик лежит на сайте в папке promo/
+function PromoBox({ t, onClose }) {
+  const closeRef = useRef(null);
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') onClose(); };
+    addEventListener('keydown', onKey);
+    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
+    closeRef.current && closeRef.current.focus();
+    return () => { removeEventListener('keydown', onKey); document.body.style.overflow = prev; };
+  }, []);
+  return html`<div className="lb" role="dialog" aria-modal="true" aria-label=${t.promo.title}>
+    <div className="lb-bd" onClick=${onClose}></div>
+    <figure className="lb-fig promo-fig">
+      <iframe src="promo/" title=${t.promo.title} className="promo-frame" allow="fullscreen" loading="eager"></iframe>
+      <figcaption className="mt-3 flex items-center justify-between gap-4 font-mono text-[12px] uppercase tracking-wider text-[color:var(--muted)]">
+        <span>${t.promo.tag}</span>
+        <a href="promo/" target="_blank" rel="noopener" className="text-[color:var(--teal)] hover:underline">${t.promo.open} ↗</a>
+      </figcaption>
+    </figure>
+    <button ref=${closeRef} onClick=${onClose} aria-label=${t.close} className="lb-close">${Icon.plus}</button>
+  </div>`;
+}
+
 function Works({ t }) {
+  const [promoOpen, setPromoOpen] = useState(false);
   return html`<section id="works" className="gutter mx-auto wrap scroll-mt-24 py-24 sm:py-32">
     <${Heading} lines=${t.worksTitle} center/>
-    <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <button type="button" onClick=${() => setPromoOpen(true)} aria-label=${`${t.promo.play}: ${t.promo.title}`}
+      className="reveal card lift group mt-14 grid w-full overflow-hidden text-left lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] lg:items-center">
+      <div className="shot relative m-2 aspect-[16/10] overflow-hidden rounded-[22px] bg-[#0B0606]">
+        <img src="img/promo.webp" alt=${t.promo.title} loading="lazy" width="1152" height="720" className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"/>
+        <div className="absolute inset-0" style=${{ background: 'linear-gradient(180deg, transparent 50%, rgba(11,6,6,.7))' }}></div>
+        <span className="promo-play absolute left-1/2 top-1/2 grid h-[76px] w-[76px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-[#1A0E0B] shadow-2xl transition-transform duration-300 group-hover:scale-110">
+          <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M8 5.5v13l11-6.5z"/></svg>
+        </span>
+        <span className="absolute bottom-4 left-4 rounded-full bg-black/55 px-3 py-1 font-mono text-[11px] text-white/90 backdrop-blur-sm">${t.promo.tag}</span>
+      </div>
+      <div className="px-6 pb-8 pt-4 lg:px-10 lg:py-8">
+        <h3 className="display text-[clamp(22px,2.2vw,32px)] font-semibold leading-tight">${t.promo.title}</h3>
+        <p className="mt-3 text-sm leading-relaxed text-[color:var(--muted)] sm:text-[15px]">${t.promo.text}</p>
+        <span className="mt-6 inline-flex items-center gap-2 rounded-full bg-[color:var(--ink)] px-5 py-3 text-sm font-semibold text-[#1d1e22]">
+          <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 4.5v15l13-7.5z"/></svg>${t.promo.play}
+        </span>
+        <p className="mt-5 font-mono text-[11px] text-[color:var(--dim)]">${t.promo.meta}</p>
+      </div>
+    </button>
+    ${promoOpen && html`<${PromoBox} t=${t} onClose=${() => setPromoOpen(false)}/>`}
+    <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       ${t.works.map(([name, what, metric], i) => html`<article key=${i} className="reveal card lift overflow-hidden" style=${{ '--d': `${(i % 3) * 0.08}s` }}>
         <div className="shot relative m-2 aspect-[16/11] overflow-hidden rounded-[22px]" style=${{ background: ART[i] }}>
           <img src=${`img/w${i + 1}.webp`} alt=${name} loading="lazy" width="960" height="660" className="absolute inset-0 h-full w-full object-cover object-top"/>
