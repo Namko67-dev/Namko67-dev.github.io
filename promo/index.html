@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="DanivaL: короткий промо-ролик. Боты, парсеры, сайты и Discord под ключ.">
+<meta name="theme-color" content="#0B0606">
+<meta property="og:title" content="DanivaL — всё ещё делаешь всё вручную?">
+<meta property="og:description" content="Telegram-боты, парсеры, сайты и Discord-серверы. Промо-ролик на 28 секунд.">
+<meta property="og:type" content="website">
+<!-- защита: скрипты только со страницы, без внешних запросов, форм и плагинов -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23111111'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='700' font-size='34' text-anchor='middle' fill='%2381D8D0'%3ED%3C/text%3E%3C/svg%3E">
+<title>DanivaL Promo Reel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+  /* Промо-ролик в духе motion design: анимируется сам интерфейс — печатается запрос, мерцает статус,
+     переворачивается карточка, камера наезжает на поле ввода, крутится список услуг; на фоне волна-сетка.
+     Фон — шёлковые волны на WebGL-шейдере, палитра «огонь»: тёмный, красно-оранжевый, золотые блики.
+     Сцена рисуется в виртуальном кадре 1600×900 (или 900×1600 на телефоне) и масштабируется под экран.
+     Вид один и намеренный, от темы устройства не зависит. */
+  :root {
+    --bg: #0B0606; --bg-2: #160B09; --text: #FFF4EA; --muted: rgba(255, 244, 234, .64);
+    --card: #FFF8F2; --ink: #1A0E0B; --ink-2: rgba(26, 14, 11, .56); --line: rgba(255, 244, 234, .16); --acc: #E8481F; --acc-ink: #FFFFFF; --panel: #B8301A; --em: #FFB07A;
+    --font-serif: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Manrope', 'Helvetica Neue', Arial, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; background: var(--bg); }
+  html { height: 100dvh; box-sizing: border-box; }
+  body { color: var(--text); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  a { color: inherit; }
+  *:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+  .app { position: relative; height: 100%; overflow: hidden; background: var(--bg); user-select: none; -webkit-user-select: none; }
+  #wave { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  /* виртуальный кадр */
+  .view { position: absolute; left: 50%; top: 50%; width: 1600px; height: 900px; transform-origin: 0 0; }
+  .portrait .view { width: 900px; height: 1600px; }
+  .cam { position: absolute; inset: 0; transform-origin: 50% 50%; will-change: transform; }
+  .el { position: absolute; left: 50%; top: 50%; opacity: 0; will-change: transform, opacity; }
+
+  /* поле запроса */
+  .prompt { width: 760px; padding: 22px 24px 18px; border-radius: 22px; background: rgba(18,8,6,.62); border: 1px solid var(--line); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); box-shadow: 0 30px 80px -30px rgba(0,0,0,.7); }
+  .portrait .prompt { width: 780px; }
+  .pr-top { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 13px; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+  .pr-top i { width: 8px; height: 8px; border-radius: 50%; background: var(--acc); }
+  .pr-text { min-height: 78px; margin-top: 14px; font-size: 30px; line-height: 1.3; font-weight: 500; color: var(--text); }
+  .caret { display: inline-block; width: 2px; height: 1.05em; margin-left: 2px; vertical-align: -3px; background: var(--text); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+  .pr-bot { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .spark { width: 18px; height: 18px; color: var(--em); opacity: 0; animation: spin 2.4s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .status { font-family: var(--font-mono); font-size: 16px; letter-spacing: .02em; background: linear-gradient(90deg, var(--muted) 0%, var(--muted) 35%, var(--text) 50%, var(--muted) 65%, var(--muted) 100%); background-size: 300% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: shimmer 1.4s linear infinite; }
+  @keyframes shimmer { from { background-position: 100% 0; } to { background-position: 0 0; } }
+  .send { display: grid; place-items: center; width: 46px; height: 46px; margin-left: auto; border-radius: 14px; background: var(--acc); color: var(--acc-ink); }
+
+  /* карточка, которая переворачивается */
+  .flip { width: 560px; height: 640px; perspective: 1400px; }
+  .portrait .flip { width: 680px; height: 800px; }
+  .flip-in { position: absolute; inset: 0; border-radius: 30px; background: var(--card); color: var(--ink); box-shadow: 0 50px 120px -40px rgba(0,0,0,.8); overflow: hidden; transform-origin: 50% 50%; transform-style: preserve-3d; }
+  .flip-in .glow { position: absolute; inset: 0; z-index: 2; background: #fff; opacity: 0; pointer-events: none; }
+  .flip-in .body { transition: none; }
+  .tg-head { display: flex; align-items: center; gap: 14px; padding: 22px 26px; border-bottom: 1px solid rgba(0,0,0,.08); }
+  .tg-ava { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: var(--ink); color: var(--card); font-weight: 700; font-size: 20px; }
+  .tg-head b { display: block; font-size: 20px; }
+  .tg-head small { color: var(--ink-2); font-size: 15px; }
+  .tg-body { display: flex; flex-direction: column; gap: 12px; padding: 22px 26px; }
+  .msg { max-width: 78%; padding: 12px 16px; border-radius: 20px; font-size: 18px; line-height: 1.35; opacity: 0; transform: translateY(14px); }
+  .msg.me { align-self: flex-end; background: var(--ink); color: var(--card); border-bottom-right-radius: 6px; }
+  .msg.bot { align-self: flex-start; background: rgba(0,0,0,.06); border-bottom-left-radius: 6px; }
+  .msg.bot b { display: block; }
+  .msg .pic { height: 120px; margin: -4px -8px 10px; border-radius: 14px; background: linear-gradient(135deg, var(--panel), var(--ink)); }
+  .msg .bt { display: inline-block; margin-top: 10px; padding: 7px 12px; border-radius: 10px; background: var(--acc); color: var(--acc-ink); font-size: 15px; font-weight: 700; }
+
+  /* вспышка */
+  .flash { position: absolute; inset: -20%; background: var(--card); opacity: 0; pointer-events: none; }
+
+  /* заголовок и поле вопроса */
+  .head { width: 1300px; text-align: center; }
+  .portrait .head { width: 820px; }
+  .serif { font-family: var(--font-serif); font-weight: 500; letter-spacing: -.02em; }
+  .head h2 { margin: 0; font-size: 92px; line-height: 1.02; }
+  .portrait .head h2 { font-size: 84px; }
+  .head h2 span { display: inline-block; }
+  .head h2 em { font-style: italic; color: var(--em); }
+  .ask { width: 720px; }
+  .portrait .ask { width: 780px; }
+
+  /* список услуг и превью */
+  .roll-panel { position: absolute; left: 0; top: 0; bottom: 0; width: 700px; background: linear-gradient(160deg, #FF8A3D 0%, #D8361A 45%, #5C0D06 100%); opacity: 0; }
+  .portrait .roll-panel { width: auto; right: 0; bottom: auto; height: 720px; }
+  .list { position: absolute; left: 350px; top: 450px; width: 560px; height: 0; }
+  .portrait .list { left: 450px; top: 360px; }
+  .list .it { position: absolute; left: 0; top: 0; width: 100%; font-family: var(--font-serif); font-size: 64px; line-height: 1; white-space: nowrap; transform-origin: 0 50%; color: var(--text); }
+  .list .it::before { content: ""; position: absolute; left: -34px; top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: currentColor; opacity: 0; transition: opacity .2s; }
+  .list .it.cur::before { opacity: 1; }
+  .portrait .list .it { text-align: left; }
+  .prev { width: 560px; height: 600px; }
+  .portrait .prev { width: 700px; height: 700px; }
+  .prev-in { position: absolute; inset: 0; border-radius: 30px; background: var(--card); color: var(--ink); overflow: hidden; box-shadow: 0 50px 120px -40px rgba(0,0,0,.8); }
+  .pv { position: absolute; inset: 0; padding: 30px; opacity: 0; transition: opacity .25s; }
+  .pv.on { opacity: 1; }
+  .pv h4 { margin: 0 0 18px; font-family: var(--font-mono); font-size: 14px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-2); }
+  .row { display: flex; justify-content: space-between; gap: 12px; padding: 16px 18px; border-radius: 14px; font-size: 19px; }
+  .row:nth-child(odd) { background: rgba(0,0,0,.04); }
+  .row s { color: var(--ink-2); }
+  .row.hot { background: var(--acc); color: var(--acc-ink); font-weight: 700; }
+  .row.hot s { color: inherit; opacity: .7; }
+  .site { border-radius: 18px; background: rgba(0,0,0,.05); padding: 26px; }
+  .site .l1 { font-family: var(--font-serif); font-size: 46px; line-height: 1.05; }
+  .site .l2 { margin-top: 14px; height: 12px; width: 60%; border-radius: 6px; background: rgba(0,0,0,.12); }
+  .site .btn2 { display: inline-block; margin-top: 22px; padding: 12px 22px; border-radius: 999px; background: var(--ink); color: var(--card); font-size: 16px; font-weight: 600; }
+  .site .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 26px; }
+  .site .grid3 i { height: 110px; border-radius: 12px; background: rgba(0,0,0,.08); }
+  .site .grid3 i:first-child { background: var(--panel); }
+  .dc { display: grid; grid-template-columns: 70px 1fr; gap: 16px; height: 100%; }
+  .dc .srv { display: flex; flex-direction: column; gap: 12px; }
+  .dc .srv i { width: 54px; height: 54px; border-radius: 18px; background: rgba(0,0,0,.08); }
+  .dc .srv i:first-child { background: var(--ink); }
+  .dc .cat { margin: 14px 0 6px; font-family: var(--font-mono); font-size: 13px; letter-spacing: .1em; color: var(--ink-2); }
+  .dc .ch { padding: 8px 12px; border-radius: 10px; font-size: 18px; }
+  .dc .ch.hot { background: var(--acc); color: var(--acc-ink); font-weight: 700; }
+  .roles { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .roles span { padding: 8px 14px; border-radius: 999px; background: rgba(0,0,0,.06); font-size: 15px; font-weight: 600; }
+
+  /* цифры и финал */
+  .stats { display: flex; gap: 90px; }
+  .portrait .stats { flex-direction: column; gap: 56px; text-align: center; }
+  .stat b { display: block; font-family: var(--font-serif); font-weight: 500; font-size: 150px; line-height: .9; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .stat span { display: block; margin-top: 14px; font-family: var(--font-mono); font-size: 16px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .final { width: 1200px; text-align: center; }
+  .portrait .final { width: 800px; }
+  .final h2 { margin: 0; font-size: 110px; line-height: 1; }
+  .portrait .final h2 { font-size: 96px; }
+  .final h2 em { font-style: italic; color: var(--em); }
+  .final .prompt { margin: 46px auto 0; text-align: left; }
+  .cta { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; margin-top: 34px; }
+  .btn { display: inline-flex; align-items: center; height: 64px; padding: 0 32px; border-radius: 999px; font-size: 20px; font-weight: 600; text-decoration: none; transition: transform .15s; }
+  .btn:active { transform: scale(.97); }
+  .btn-acc { background: var(--acc); color: var(--acc-ink); }
+  .btn-line { border: 1px solid var(--line); color: var(--text); }
+
+  /* верх и управление (вне виртуального кадра) */
+  .top { position: absolute; z-index: 10; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 12px; height: 58px; padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px)); }
+  .brand { font-family: var(--font-serif); font-size: 21px; font-weight: 500; }
+  .pill { display: flex; padding: 3px; border-radius: 999px; border: 1px solid var(--line); background: rgba(0,0,0,.25); }
+  .pill button { min-width: 36px; height: 30px; padding: 0 9px; border: 0; border-radius: 999px; background: transparent; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .pill button[aria-pressed="true"] { background: var(--text); color: var(--bg); }
+  .pal { margin-left: auto; }
+  .pal span { align-self: center; padding: 0 8px 0 10px; font-family: var(--font-mono); font-size: 11px; color: var(--muted); }
+  .ctrl { position: absolute; z-index: 10; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 2px; padding: 4px; border-radius: 999px; border: 1px solid var(--line); background: rgba(0,0,0,.3); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .pb { display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; color: var(--text); }
+  .pb:hover { background: rgba(255,255,255,.08); }
+</style>
+
+<div class="app" id="app">
+  <canvas id="wave" aria-hidden="true"></canvas>
+
+  <div class="view" id="view">
+    <div class="cam" id="cam">
+      <div class="roll-panel" id="rollPanel"></div>
+
+      <!-- запрос -->
+      <div class="el prompt" id="prompt">
+        <div class="pr-top"><i></i><span data-t="newProject"></span></div>
+        <div class="pr-text"><span id="prText"></span><span class="caret"></span></div>
+        <div class="pr-bot"><svg class="spark" id="spark" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2C12.6 8 16 11.4 22 12C16 12.6 12.6 16 12 22C11.4 16 8 12.6 2 12C8 11.4 11.4 8 12 2Z"/></svg><span class="status" id="status"></span><span class="send" id="send"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span></div>
+      </div>
+
+      <!-- карточка бота -->
+      <div class="el flip" id="flip">
+        <div class="flip-in" id="flipIn">
+          <div class="body" id="flipBody">
+            <div class="tg-head"><div class="tg-ava">D</div><div><b>Demo Shop</b><small data-t="botSub"></small></div></div>
+            <div class="tg-body" id="chat"></div>
+          </div>
+          <div class="glow" id="flipGlow"></div>
+        </div>
+      </div>
+
+      <!-- заголовок и вопрос -->
+      <div class="el head" id="head"><h2 class="serif" id="headH"></h2></div>
+      <div class="el prompt ask" id="ask">
+        <div class="pr-top"><i></i><span data-t="next"></span></div>
+        <div class="pr-text"><span id="askText"></span><span class="caret"></span></div>
+      </div>
+
+      <!-- список услуг -->
+      <div class="list" id="list"></div>
+      <div class="el prev" id="prev"><div class="prev-in" id="prevIn"></div></div>
+
+      <!-- цифры -->
+      <div class="el stats" id="stats"></div>
+
+      <!-- финал -->
+      <div class="el final" id="final">
+        <h2 class="serif" id="finalH"></h2>
+        <div class="prompt" id="finalPrompt">
+          <div class="pr-top"><i></i><span data-t="yourTask"></span></div>
+          <div class="pr-text"><span id="finalText"></span><span class="caret"></span></div>
+        </div>
+        <div class="cta" id="cta">
+          <a class="btn btn-acc" href="https://t.me/DanivaL_Official" target="_blank" rel="noopener noreferrer" data-t="ctaTg"></a>
+          <a class="btn btn-line" href="https://namko67-dev.github.io" target="_blank" rel="noopener noreferrer" data-t="ctaPf"></a>
+        </div>
+      </div>
+
+      <div class="flash" id="flash"></div>
+    </div>
+  </div>
+
+  <header class="top">
+    <span class="brand">DanivaL</span>
+    <div class="pill" style="margin-left:auto" role="group" aria-label="Язык / Language"><button type="button" data-lang="ru" aria-pressed="true">RU</button><button type="button" data-lang="en" aria-pressed="false">EN</button></div>
+  </header>
+  <div class="ctrl" role="group" aria-label="Управление роликом">
+    <button class="pb" type="button" id="replay" aria-label="Сначала"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/></svg></button>
+    <button class="pb" type="button" id="play" aria-label="Пауза"><svg id="icPlay" width="16" height="16" viewBox="0 0 24 24"></svg></button>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const REDUCE = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  const out = t => 1 - Math.pow(1 - t, 3);
+  const back = t => { const c = 1.4; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); };
+  const seg = (t, a, b) => clamp((t - a) / (b - a));
+  const $ = s => document.querySelector(s);
+  const $$ = s => [...document.querySelectorAll(s)];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  /* ---------- тексты ---------- */
+  const T = {
+    ru: {
+      newProject: 'Новый проект', next: 'Дальше', yourTask: 'Твоя задача', palette: 'цвет', botSub: 'бот · онлайн',
+      prompt: 'Сделай бота, который сам продаёт и принимает оплату',
+      status: ['Думаю…', 'Размышляю…', 'Собираю каталог…', 'Подключаю оплату…'],
+      chat: [['me', 'Каталог'], ['bot', '<div class="pic"></div><b>Худи «Oversize»</b>3 490 ₽<br><span class="bt">В корзину</span>'], ['me', 'Оплатить'], ['bot', '<b>Оплачено ✓</b>Заказ №1042 передан менеджеру']],
+      head: ['Бот', 'готов.', '<em>Что</em>', '<em>дальше?</em>'],
+      ask: 'Добавь парсер цен и сайт-визитку',
+      list: ['Telegram-боты', 'Парсеры', 'Сайты', 'Discord', 'Автопостинг', 'Оплата', 'Модерация', 'Хостинг 24/7'],
+      pvBot: 'Telegram-бот', pvParser: 'Мониторинг цен', pvSite: 'Сайт', pvDc: 'Discord-сервер',
+      lots: [['Steam Deck OLED', '52 000', '39 900'], ['iPhone 15', '61 000', '60 200'], ['PS5 Slim', '47 500', '46 900'], ['RTX 4070', '58 900', '57 400']],
+      siteH: 'Кофе, который будит город', siteBtn: 'Заказать',
+      dc: [['ИНФО', ['# правила', '# новости']], ['ПОДДЕРЖКА', ['# создать-тикет', '# тикет-0042']]], roles: ['Админ', 'Модератор', 'Участник'],
+      stats: [['5.0', 'рейтинг FunPay'], ['34', 'отзыва'], ['24/7', 'на хостинге']],
+      final: 'Напиши — <em>сделаю.</em>', finalText: 'Нужен бот для магазина в Telegram',
+      ctaTg: 'Написать в Telegram', ctaPf: 'Портфолио',
+      pause: 'Пауза', play: 'Продолжить',
+    },
+    en: {
+      newProject: 'New project', next: 'Next', yourTask: 'Your task', palette: 'color', botSub: 'bot · online',
+      prompt: 'Build a bot that sells on its own and takes payments',
+      status: ['Thinking…', 'Pondering…', 'Building the catalog…', 'Connecting payments…'],
+      chat: [['me', 'Catalog'], ['bot', '<div class="pic"></div><b>Oversize hoodie</b>$39<br><span class="bt">Add to cart</span>'], ['me', 'Pay'], ['bot', '<b>Paid ✓</b>Order #1042 sent to the manager']],
+      head: ['The bot', 'is ready.', '<em>What’s</em>', '<em>next?</em>'],
+      ask: 'Add a price scraper and a landing page',
+      list: ['Telegram bots', 'Scrapers', 'Websites', 'Discord', 'Auto-posting', 'Payments', 'Moderation', 'Hosting 24/7'],
+      pvBot: 'Telegram bot', pvParser: 'Price monitor', pvSite: 'Website', pvDc: 'Discord server',
+      lots: [['Steam Deck OLED', '$560', '$430'], ['iPhone 15', '$660', '$650'], ['PS5 Slim', '$510', '$505'], ['RTX 4070', '$640', '$625']],
+      siteH: 'Coffee that wakes the city', siteBtn: 'Order now',
+      dc: [['INFO', ['# rules', '# news']], ['SUPPORT', ['# open-a-ticket', '# ticket-0042']]], roles: ['Admin', 'Moderator', 'Member'],
+      stats: [['5.0', 'FunPay rating'], ['34', 'reviews'], ['24/7', 'on hosting']],
+      final: 'Message me — <em>I’ll build it.</em>', finalText: 'I need a Telegram bot for my shop',
+      ctaTg: 'Message on Telegram', ctaPf: 'Portfolio',
+      pause: 'Pause', play: 'Play',
+    },
+  };
+  let lang = 'ru';
+  try { const s = localStorage.getItem('dl-reel-lang'); if (s === 'en' || s === 'ru') lang = s; } catch (e) { /* нет хранилища */ }
+  const qp = new URLSearchParams(location.search);
+
+  function render() {
+    const L = T[lang];
+    document.documentElement.lang = lang;
+    $$('[data-t]').forEach(n => { const v = L[n.dataset.t]; if (typeof v === 'string') n.textContent = v; });
+    $('#chat').innerHTML = L.chat.map(m => `<div class="msg ${m[0]}">${m[1]}</div>`).join('');
+    $('#headH').innerHTML = L.head.map(w => `<span>${w}</span>`).join(' ');
+    $('#list').innerHTML = L.list.map(w => `<div class="it">${esc(w)}</div>`).join('');
+    $('#prevIn').innerHTML = `
+      <div class="pv" data-pv="0"><h4>${esc(L.pvBot)}</h4>${L.chat.map(m => `<div class="msg ${m[0]}" style="opacity:1;transform:none;margin-bottom:12px;${m[0] === 'me' ? 'margin-left:auto;width:max-content' : ''}">${m[1]}</div>`).join('')}</div>
+      <div class="pv" data-pv="1"><h4>${esc(L.pvParser)}</h4>${L.lots.map((l, i) => `<div class="row${i === 0 ? ' hot' : ''}"><span>${esc(l[0])}</span><span><s>${esc(l[1])}</s>&nbsp; ${esc(l[2])}</span></div>`).join('')}</div>
+      <div class="pv" data-pv="2"><h4>${esc(L.pvSite)}</h4><div class="site"><div class="l1">${esc(L.siteH)}</div><div class="l2"></div><span class="btn2">${esc(L.siteBtn)}</span><div class="grid3"><i></i><i></i><i></i></div></div></div>
+      <div class="pv" data-pv="3"><h4>${esc(L.pvDc)}</h4><div class="dc"><div class="srv"><i></i><i></i><i></i></div><div>${L.dc.map(c => `<div class="cat">${esc(c[0])}</div>${c[1].map(ch => `<div class="ch${ch.endsWith('0042') ? ' hot' : ''}">${esc(ch)}</div>`).join('')}`).join('')}<div class="roles">${L.roles.map(r => `<span>${esc(r)}</span>`).join('')}</div></div></div></div>`;
+    $('#stats').innerHTML = L.stats.map(s => `<div class="stat"><b data-v="${esc(s[0])}">${esc(s[0])}</b><span>${esc(s[1])}</span></div>`).join('');
+    $('#finalH').innerHTML = L.final;
+    $$('[data-lang]').forEach(b => b.setAttribute('aria-pressed', b.dataset.lang === lang));
+    draw();
+  }
+  $$('[data-lang]').forEach(b => b.addEventListener('click', () => { lang = b.dataset.lang; try { localStorage.setItem('dl-reel-lang', lang); } catch (e) { /* нет хранилища */ } render(); }));
+
+  /* ---------- виртуальный кадр под экран ---------- */
+  const app = $('#app'), view = $('#view'), cam = $('#cam');
+  let VW = 1600, VH = 900, portrait = false;
+  function layout() {
+    portrait = innerWidth / innerHeight < .9;
+    app.classList.toggle('portrait', portrait);
+    VW = portrait ? 900 : 1600; VH = portrait ? 1600 : 900;
+    const s = Math.min(innerWidth / VW, innerHeight / VH);
+    view.style.transform = `scale(${s}) translate(-50%, -50%)`;
+    view.style.transformOrigin = '0 0';
+    sizeWave();
+    draw();
+  }
+  addEventListener('resize', layout);
+
+  /* ---------- фон: шёлковые волны (WebGL-шейдер) ---------- */
+  const wave = $('#wave');
+  const gl = wave.getContext('webgl', { antialias: false, premultipliedAlpha: false }) || wave.getContext('experimental-webgl');
+  const FRAG = `
+    precision highp float;
+    uniform vec2 uRes; uniform float uTime; uniform float uEnergy;
+    // высота «ткани»: несколько волн, которые искривляют друг друга
+    float h(vec2 p, float t) {
+      vec2 q = p;
+      q.x += sin(p.y * 1.7 + t * .35) * .35;
+      q.y += sin(p.x * 1.2 - t * .28) * .25;
+      float v = sin(q.x * 2.1 + q.y * 1.3 + t * .55);
+      v += .55 * sin(q.x * -1.4 + q.y * 2.6 - t * .42 + 1.7);
+      v += .25 * sin((q.x + q.y) * 4.2 + t * .8);
+      return v;
+    }
+    void main() {
+      vec2 uv = gl_FragCoord.xy / uRes;
+      vec2 p = (gl_FragCoord.xy - .5 * uRes) / min(uRes.x, uRes.y) * 2.3;
+      p.y += .25;
+      float t = uTime;
+      float e = .004;
+      float c = h(p, t);
+      vec2 g = vec2(h(p + vec2(e, 0.), t) - c, h(p + vec2(0., e), t) - c) / e;
+      vec3 n = normalize(vec3(-g * .3, 1.));
+      vec3 L = normalize(vec3(-.45, .65, .62));
+      float dif = clamp(dot(n, L), 0., 1.);
+      float spec = pow(clamp(dot(reflect(-L, n), vec3(0., 0., 1.)), 0., 1.), 36.);
+      float sheen = pow(1. - abs(n.z), 1.6);
+      // палитра «огонь»: тёмный бордо → красный → оранжевый, золотые блики
+      vec3 c0 = vec3(.043, .024, .024), c1 = vec3(.36, .05, .024), c2 = vec3(.85, .21, .1), c3 = vec3(1., .54, .24), hi = vec3(1., .84, .66);
+      float k = clamp(dif * .9 + c * .08, 0., 1.);
+      vec3 col = mix(c0, c1, smoothstep(.05, .45, k));
+      col = mix(col, c2, smoothstep(.45, .8, k));
+      col = mix(col, c3, smoothstep(.8, 1., k) * .8);
+      col += hi * spec * (.55 + uEnergy * .8) + c3 * sheen * .25;
+      // глубина: сверху темнее, по краям виньетка
+      float vg = smoothstep(1.25, .2, length((uv - vec2(.5, .42)) * vec2(1.1, 1.4)));
+      col *= mix(.25, 1., vg) * mix(.35, 1., smoothstep(1., .35, uv.y));
+      col += uEnergy * .25 * c3;
+      gl_FragColor = vec4(col, 1.);
+    }`;
+  let prog = null, uRes, uTime, uEnergy;
+  if (gl) {
+    try {
+      const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+      prog = gl.createProgram();
+      gl.attachShader(prog, sh(gl.VERTEX_SHADER, 'attribute vec2 a; void main(){ gl_Position = vec4(a, 0., 1.); }'));
+      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FRAG));
+      gl.linkProgram(prog); gl.useProgram(prog);
+      const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const loc = gl.getAttribLocation(prog, 'a'); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+      uRes = gl.getUniformLocation(prog, 'uRes'); uTime = gl.getUniformLocation(prog, 'uTime'); uEnergy = gl.getUniformLocation(prog, 'uEnergy');
+    } catch (err) { prog = null; }
+  }
+  if (!prog) wave.style.background = 'radial-gradient(120% 80% at 50% 70%, #D8361A 0%, #5C0D06 45%, #0B0606 80%)';
+  function sizeWave() {
+    // на телефоне рисуем в пониженном разрешении: ткань мягкая, детали не нужны
+    const k = Math.min(innerWidth, innerHeight) < 700 ? .5 : Math.min(1.25, window.devicePixelRatio || 1) * .75;
+    wave.width = Math.max(1, Math.round(wave.clientWidth * k)); wave.height = Math.max(1, Math.round(wave.clientHeight * k));
+    if (prog) gl.viewport(0, 0, wave.width, wave.height);
+  }
+  function drawWave(time, energy) {
+    if (!prog) return;
+    gl.uniform2f(uRes, wave.width, wave.height); gl.uniform1f(uTime, time); gl.uniform1f(uEnergy, energy);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+  }
+
+  /* ---------- таймлайн ---------- */
+  const TOTAL = 28;
+  const el = id => document.getElementById(id);
+  const show = (n, o, x = 0, y = 0, s = 1, extra = '') => { n.style.opacity = o.toFixed(3); n.style.transform = `translate(-50%,-50%) translate(${x.toFixed(1)}px,${y.toFixed(1)}px) scale(${s.toFixed(4)}) ${extra}`; n.style.pointerEvents = o > .5 ? 'auto' : 'none'; };
+  const typed = (s, k) => { const ch = [...s]; return esc(ch.slice(0, Math.round(ch.length * clamp(k))).join('')); };
+
+  function draw() {
+    const t = state.t, L = T[lang];
+    // камера: лёгкие наезды, как в ролике
+    // каждый наезд живёт только внутри своей сцены
+    let cs = 1, cx = 0, cy = 0;
+    if (t < 8.9) cs = lerp(1, 1.06, ease(seg(t, 5.2, 8.6)));
+    else if (t < 13.2) { const z = ease(seg(t, 11.0, 12.8)); cs = lerp(1, 1.7, z); cy = lerp(0, portrait ? -240 : -190, z); }
+    else if (t < 19.3) cs = lerp(1, 1.04, ease(seg(t, 13.6, 19)));
+    else if (t >= 22.9) cs = lerp(1, 1.04, ease(seg(t, 23, 28)));
+    if (REDUCE) { cs = 1; cy = 0; }
+    cam.style.transform = `translate(${cx}px,${cy}px) scale(${cs.toFixed(4)})`;
+
+    // 1. запрос печатается, статус мерцает
+    const pr = el('prompt');
+    const pIn = out(seg(t, 0, .7)), pOut = ease(seg(t, 4.6, 5.4));
+    show(pr, pIn * (1 - pOut), 0, (1 - pIn) * 30 - pOut * (portrait ? 420 : 300), 1 - pOut * .12);
+    el('prText').innerHTML = typed(L.prompt, seg(t, .7, 2.8));
+    const sendP = seg(t, 2.8, 3.1);
+    el('send').style.transform = `scale(${(1 - Math.sin(sendP * Math.PI) * .18).toFixed(3)})`;
+    const si = t < 3.1 ? -1 : Math.min(L.status.length - 1, Math.floor((t - 3.1) / .42));
+    el('status').textContent = si < 0 ? '' : L.status[si];
+    el('spark').style.opacity = si < 0 ? 0 : 1;
+
+    // 2. белая карточка вылетает из глубины, крутится, вспыхивает и превращается в чат бота
+    const fl = el('flip'), fIn = seg(t, 4.5, 6.0), fOut = ease(seg(t, 8.4, 8.8));
+    const fk = out(fIn);
+    show(fl, clamp(fIn * 4) * (1 - fOut), 0, (portrait ? 60 : 20) + (1 - fk) * -120, lerp(.12, 1, fk) * (1 + fOut * .1));
+    el('flipIn').style.transform = REDUCE ? 'none' : `rotateY(${((1 - fk) * -540).toFixed(1)}deg) rotateX(${((1 - fk) * 28).toFixed(1)}deg)`;
+    el('flipGlow').style.opacity = (seg(t, 5.7, 6.0) * (1 - seg(t, 6.05, 6.45)) + (1 - clamp(fIn * 1.6)) ).toFixed(3);
+    el('flipBody').style.opacity = seg(t, 5.95, 6.2).toFixed(3);
+    $$('#chat .msg').forEach((m, i) => { const k = out(seg(t, 6.2 + i * .5, 6.6 + i * .5)); m.style.opacity = k; m.style.transform = `translateY(${((1 - k) * 14).toFixed(1)}px)`; });
+
+    // вспышка
+    const fla = el('flash');
+    fla.style.opacity = (seg(t, 8.6, 8.85) * (1 - seg(t, 8.95, 9.4))).toFixed(3);
+
+    // 3. заголовок и поле вопроса, наезд камеры
+    const hd = el('head'), hOut = seg(t, 13.0, 13.3);
+    show(hd, (t > 9 ? 1 : 0) * (1 - hOut), 0, portrait ? -260 : -150, 1);
+    $$('#headH span').forEach((w, i) => { const k = out(seg(t, 9.2 + i * .22, 9.8 + i * .22)); w.style.opacity = k; w.style.transform = `translateY(${((1 - k) * 40).toFixed(1)}px)`; w.style.filter = `blur(${((1 - k) * 8).toFixed(1)}px)`; });
+    const ak = el('ask'), aIn = out(seg(t, 10.2, 10.8));
+    show(ak, aIn * (1 - hOut), 0, (portrait ? 140 : 110) + (1 - aIn) * 30, 1);
+    el('askText').innerHTML = typed(L.ask, seg(t, 10.8, 12.6));
+
+    // 4. список услуг крутится, превью меняется
+    const rp = el('rollPanel'), rIn = seg(t, 13.2, 13.7), rOut = seg(t, 19.0, 19.3);
+    rp.style.opacity = (rIn * (1 - rOut)).toFixed(3);
+    rp.style.transform = portrait ? `translateY(${((1 - out(rIn)) * -100).toFixed(1)}%)` : `translateX(${((1 - out(rIn)) * -100).toFixed(1)}%)`;
+    const items = $$('#list .it'), n = items.length;
+    const pos = REDUCE ? 2 : lerp(-.6, n - 1.4, ease(seg(t, 13.5, 18.8)));
+    const curI = clamp(Math.round(pos), 0, n - 1);
+    items.forEach((it, i) => {
+      const d = i - pos, a = Math.abs(d);
+      it.style.opacity = (clamp(1 - a / 3.2) * rIn * (1 - rOut)).toFixed(3);
+      it.style.transform = `translate(-50%, ${(d * 86 - 32).toFixed(1)}px) scale(${(1 - Math.min(a, 3) * .12).toFixed(3)})`;
+      it.classList.toggle('cur', i === curI);
+    });
+    const pv = el('prev'), pIn2 = out(seg(t, 13.6, 14.3));
+    show(pv, pIn2 * (1 - rOut), portrait ? 0 : 330, (portrait ? 400 : 0) + (1 - pIn2) * 40, 1);
+    const map = [0, 1, 2, 3, 0, 0, 3, 2];
+    $$('.pv').forEach(p => p.classList.toggle('on', +p.dataset.pv === map[curI]));
+
+    // 5. цифры
+    const st = el('stats'), sIn = out(seg(t, 19.3, 19.9)), sOut = seg(t, 22.4, 22.8);
+    show(st, sIn * (1 - sOut), 0, (1 - sIn) * 30, 1 - sOut * .05);
+    const c = out(seg(t, 19.4, 21));
+    $$('#stats b').forEach((b, i) => { const v = b.dataset.v; if (/^\d+(\.\d+)?$/.test(v)) b.textContent = (parseFloat(v) * c).toFixed(v.includes('.') ? 1 : 0); b.parentNode.style.opacity = out(seg(t, 19.3 + i * .15, 19.9 + i * .15)); });
+
+    // 6. финал
+    const fn = el('final'), fnIn = out(seg(t, 22.9, 23.6));
+    show(fn, fnIn, 0, (1 - fnIn) * 30, 1);
+    el('finalText').innerHTML = typed(L.finalText, seg(t, 23.9, 25.6));
+    const ctaK = out(seg(t, 25.8, 26.4));
+    el('cta').style.opacity = ctaK; el('cta').style.transform = `translateY(${((1 - ctaK) * 16).toFixed(1)}px)`;
+  }
+
+  /* ---------- проигрывание ---------- */
+  const state = { t: 0, playing: true };
+  const fq = parseFloat(qp.get('t'));
+  if (!isNaN(fq)) { state.t = clamp(fq, 0, TOTAL); state.playing = false; }
+  function paintPlay() {
+    el('icPlay').innerHTML = state.playing ? '<path fill="currentColor" d="M6.5 4h3.5v16H6.5zM14 4h3.5v16H14z"/>' : '<path fill="currentColor" d="M7 4.5v15l13-7.5z"/>';
+    el('play').setAttribute('aria-label', state.playing ? T[lang].pause : T[lang].play);
+  }
+  el('play').addEventListener('click', () => { if (state.t >= TOTAL) state.t = 0; state.playing = !state.playing; paintPlay(); });
+  el('replay').addEventListener('click', () => { state.t = 0; state.playing = true; paintPlay(); });
+  addEventListener('keydown', e => { if (e.key === ' ') { e.preventDefault(); el('play').click(); } });
+  document.addEventListener('visibilitychange', () => { if (document.hidden && state.playing) { state.playing = false; paintPlay(); } });
+
+  let last = performance.now();
+  function loop(now) {
+    requestAnimationFrame(loop);
+    const dt = Math.min(.1, (now - last) / 1000); last = now;
+    if (state.playing) { state.t += dt; if (state.t >= TOTAL) { state.t = TOTAL; state.playing = false; paintPlay(); } draw(); }
+    const energy = Math.sin(seg(state.t, 8.4, 9.8) * Math.PI) * .8 + seg(state.t, 13.2, 13.8) * .2;
+    drawWave(REDUCE ? 0 : now / 1000, energy);
+  }
+
+  layout();
+  render();
+  paintPlay();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  requestAnimationFrame(loop);
+})();
+</script>
+
+</html>
