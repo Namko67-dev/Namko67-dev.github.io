@@ -16,12 +16,15 @@
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="ru_RU">
 <meta name="twitter:card" content="summary_large_image">
+<!-- защита: скрипты только с этого сайта, без форм наружу, плагинов и подмены базового адреса -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; media-src 'self'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%231d1e22'/%3E%3Ctext x='32' y='44' font-family='Arial' font-weight='700' font-size='34' text-anchor='middle' fill='%23f3f3f1'%3ED%3C/text%3E%3C/svg%3E">
 <title>DanivaL Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="vendor/tailwind-3.4.17.js"></script>
 <script>
   tailwind.config = {
     theme: {
@@ -236,9 +239,9 @@
 <div class="ambient" aria-hidden="true"></div>
 <div id="root"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/htm@3.1.1/dist/htm.umd.js"></script>
+<script src="vendor/react-18.3.1.min.js"></script>
+<script src="vendor/react-dom-18.3.1.min.js"></script>
+<script src="vendor/htm-3.1.1.umd.js"></script>
 <script>
 const { useState, useEffect, useRef, useMemo } = React;
 const html = htm.bind(React.createElement);
